@@ -1,0 +1,1062 @@
+\ifdefined\ishandout
+  %% \documentclass[handout,xcolor=dvipsnames]{beamer}
+  \documentclass[xcolor=dvipsnames]{beamer}
+\else
+  \documentclass[xcolor=dvipsnames]{beamer}
+\fi
+
+\mode<presentation>
+{
+%% \usetheme{Frankfurt}
+%% \useoutertheme{split}
+	%% \usetheme{CambridgeUS}
+	%% \usetheme{Hannover}
+  \usetheme{Singapore}
+	\usecolortheme{rose}
+}
+\usepackage{amsmath,stmaryrd}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{cmap}
+\usepackage{listings}
+\usepackage{lmodern}
+\usepackage{xparse}
+\usepackage{color}
+\usepackage{minted}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning}
+\usetikzlibrary{fadings,decorations.pathmorphing}
+\usetikzlibrary{shapes.multipart,matrix,calc}
+\usetikzlibrary{arrows}
+\usetikzlibrary{shapes.callouts} 
+\usetikzlibrary{shadows,calc}
+\usepackage{wrapfig}
+\usepackage{stmaryrd}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{xspace}
+
+\usepackage[labelformat=empty]{caption}
+\usepackage{fontspec}
+%% \usepackage{polyglossia}
+%% \setdefaultlanguage{russian}
+
+\setmainfont[Ligatures=TeX]{CMU Serif}
+\setsansfont[Ligatures=TeX]{CMU Sans Serif}
+%% \setmonofont{Nimbus Mono PS}
+
+\tikzset{
+    invisible/.style={opacity=0,text opacity=0},
+    visible on/.style={alt=#1{}{invisible}},
+    alt/.code args={<#1>#2#3}{%
+      \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}} % \pgfkeysalso doesn't change the path
+    },
+}
+
+\NewDocumentCommand{\mycallout}{r<> O{center} O{opacity=1.0,text opacity=1} m m m +m}{%
+\tikz[remember picture, overlay]\node[align=#2, fill=#4!20, %text width=3cm,
+#3,visible on=<#1>, rounded corners,
+draw,rectangle callout,anchor=pointer,callout relative pointer={#6}
+]
+at #5 {#7};
+}
+
+\newcommand{\tikzmark}[1]{\tikz[overlay,remember picture,baseline=-0.5ex] \node (#1) {};}
+\newcommand{\toGray}[3]{\only<-#1>{#3} \only<#2->{\textcolor{gray!30}{#3}}}
+
+\definecolor{myGray}{RGB}{50,50,50}
+
+\newcommand{\itab}[1]{\hspace{0em}\rlap{#1}}
+\newcommand{\tab}[1]{\hspace{.2\textwidth}\rlap{#1}}
+
+\newcommand{\inarr}[1]{\begin{array}{@{}l@{}}#1\end{array}}
+\newcommand{\inarrc}[1]{\begin{array}{@{}c@{}}#1\end{array}}
+\newcommand{\inarrIIId}[3]{\begin{array}{@{}l@{~}||@{~}l@{~}||@{~}l@{}}\inarr{#1}&\inarr{#2}&\inarr{#3}\end{array}}
+
+\newcommand{\myblock}[1]{\begin{block}{} #1 \end{block}}
+
+
+\definecolor{CommentColor}{rgb}{0.0,0.4,0.1}
+
+\newcommand{\commenta}[1]{\color{CommentColor}{\texttt{/*}\textit{ #1 }\texttt{*/}}}
+\newcommand{\comment}[1]{{\color{CommentColor}~\texttt{/\!\!/}\,{#1}}}
+\newcommand{\nocomment}[1]{{\color{red}~~\texttt{/\!\!/}\,{#1}}}
+\newcommand{\progval}[1]{{\color{CommentColor} #1}}
+
+\newcommand\semState[2]{\llbracket #1 \rrbracket _{#2}}
+
+\newcommand{\storageThreeThreads}[3]{
+    \draw (0,0.5) rectangle (3,1) node [pos=.5] {Thread 1};
+    \draw (3.5,0.5) rectangle (6.5 ,1) node [pos=.5] {Thread 2};
+    \draw (7.0,0.5) rectangle (10.0,1) node [pos=.5] {Thread 3};
+    \draw (1,0.5) -- (1, 0.5 -#1) -- (5.0, 0.5 -#1) -- (5.0,0.5);
+    \draw (3.0, 0.5 -#1) -- (3.0, 0.5 -#1 - #2) -- (8.5, 0.5 -#1 - #2) -- (8.5, 0.5);
+    \draw (5.75, 0.5 -#1 - #2) -- (5.75, 0.5 -#1 - #2 - #3);
+
+    \node at (5.75, 0.3 -#1 - #2 - #3) {The main memory};
+    \draw (4.75, 0.1 -#1 - #2 - #3) -- (6.75, 0.1 -#1 - #2 - #3);
+}
+
+\newcommand{\storageTwoThreads}[2]{
+    \draw (0,#1) rectangle (2,#1 + 0.5) node [pos=.5] {Thread 1};
+    \draw (2.5,#1) rectangle (4.5,#1 + 0.5) node [pos=.5] {Thread 2};
+    \draw (1,#1) -- (1,-0.5) -- (3.5,-0.5) -- (3.5,#1);
+    \draw (2.25, -0.5) -- (2.25, -#2);
+
+    \node at (2.25, -#2 - 0.2) {The main memory};
+    \draw (1.25, -#2 - 0.4) -- (3.25, -#2 - 0.4);
+}
+
+\newcommand{\executed}[1]{\colorbox{gray}{\ensuremath{#1}}}
+\newcommand{\markExecuted}[3]{
+  \only<-#1>{#3}
+  \only<#2->{\executed{#3}}
+}
+\newcommand{\light}[1]{\textcolor{gray!30}{#1}}
+
+\makeatletter
+\def\ft@overlay{}
+
+\addtobeamertemplate{footline}{}%
+{%
+  \lineskiplimit0pt
+  \begin{tikzpicture}[remember picture,overlay]%
+  \ft@overlay
+  \end{tikzpicture}%
+  \gdef\ft@overlay{}%
+}
+
+\newcommand<>{\addtooverlay}[1]{%
+  \only#2{%
+  \expandafter\gdef\expandafter\ft@overlay\expandafter{\ft@overlay #1}%
+  }%
+}
+
+\def\shadowshift{3pt,-3pt}
+\def\shadowradius{6pt}
+
+\colorlet{innercolor}{black!60}
+\colorlet{outercolor}{blue!05}
+
+% this draws a shadow under a rectangle node
+\newcommand\drawshadow[1]{
+    \begin{pgfonlayer}{shadow}
+        \shade[outercolor,inner color=innercolor,outer color=outercolor] ($(#1.south west)+(\shadowshift)+(\shadowradius/2,\shadowradius/2)$) circle (\shadowradius);
+        \shade[outercolor,inner color=innercolor,outer color=outercolor] ($(#1.north west)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$) circle (\shadowradius);
+        \shade[outercolor,inner color=innercolor,outer color=outercolor] ($(#1.south east)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$) circle (\shadowradius);
+        \shade[outercolor,inner color=innercolor,outer color=outercolor] ($(#1.north east)+(\shadowshift)+(-\shadowradius/2,-\shadowradius/2)$) circle (\shadowradius);
+        \shade[top color=innercolor,bottom color=outercolor] ($(#1.south west)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$) rectangle ($(#1.south east)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$);
+        \shade[left color=innercolor,right color=outercolor] ($(#1.south east)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$) rectangle ($(#1.north east)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$);
+        \shade[bottom color=innercolor,top color=outercolor] ($(#1.north west)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$) rectangle ($(#1.north east)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$);
+        \shade[outercolor,right color=innercolor,left color=outercolor] ($(#1.south west)+(\shadowshift)+(-\shadowradius/2,\shadowradius/2)$) rectangle ($(#1.north west)+(\shadowshift)+(\shadowradius/2,-\shadowradius/2)$);
+        %% \filldraw ($(#1.south west)+(\shadowshift)+(\shadowradius/2,\shadowradius/2)$) rectangle ($(#1.north east)+(\shadowshift)-(\shadowradius/2,\shadowradius/2)$);
+    \end{pgfonlayer}
+}
+
+% create a shadow layer, so that we don't need to worry about overdrawing other things
+\pgfdeclarelayer{shadow} 
+\pgfsetlayers{shadow,main}
+
+\newsavebox\mybox
+\newlength\mylen
+
+%% \newcommand\shadowimage[2][]{%
+%% \begin{tikzpicture}
+%% \node[anchor=south west,inner sep=0] (image) at (0,0) {\colorbox{white}{\includegraphics[#1]{#2}}};
+%% \drawshadow{image}
+%% \end{tikzpicture}}
+
+\newcommand\shadowimage[2][]{%
+\setbox0=\hbox{\includegraphics[#1]{#2}}
+\setlength\mylen{\wd0}
+\ifnum\mylen<\ht0
+\setlength\mylen{\ht0}
+\fi
+\divide \mylen by 120
+\def\shadowshift{\mylen,-\mylen}
+\def\shadowradius{\the\dimexpr\mylen+\mylen+\mylen\relax}
+\begin{tikzpicture}
+  \node[anchor=south west,inner sep=0] (image) at (0,0) {\colorbox{white}{\includegraphics[#1]{#2}}};
+  \begin{pgfonlayer}{shadow}
+     \drawshadow{image}
+  \end{pgfonlayer}
+\end{tikzpicture}}
+
+\makeatother
+
+\lstdefinelanguage
+   [sparc]{Assembler}     % add a "x64" dialect of Assembler
+   [x86masm]{Assembler} % based on the "x86masm" dialect
+   % with these extra keywords
+   {morekeywords={ldw, stw, LD, ADD, SUB, ST, OP, BR, BLTZ, BGTZ, HALT, CMOZ, BL}} % etc.
+\lstset{language={[sparc]Assembler}}
+
+\include{defs}
+
+%% \selectlanguage{russian}
+%% \newtranslation[to=russian]{Section}{Раздел}
+%% \AtBeginSection{\frame{\sectionpage}}
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \large
+    %% \frametitle{Outline for section \thesection}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\addtobeamertemplate{navigation symbols}{}{%
+    \usebeamerfont{footline}%
+    \usebeamercolor[fg]{footline}%
+    \hspace{1em}%
+    {\bf \huge \insertframenumber}
+}
+
+\begin{document}
+\title
+{Операционные методы в приложении к слабым моделям памяти}
+\author
+[А.В. Подкопаев]
+{\textbf{Подкопаев Антон Викторович}}
+\institute{
+\begin{tabular}{r l}
+Научный руководитель: & д.т.н., доцент Д.В. Кознов (СПбГУ)
+\end{tabular}
+
+\vspace{2cm}
+Семинар ИСП РАН
+}
+\date[16-11-17]{16.11.2017}
+
+\newcommand{\fr} [2]{\begin{frame}{#1} #2 \end{frame}}
+\newcommand{\frN}[2]{\begin{frame}[noframenumbering]{#1} #2 \end{frame}}
+\newcommand{\ite}[1]{\begin{itemize} #1 \end{itemize}}
+\newcommand{\iteN}[1]{\begin{enumerate} #1 \end{enumerate}}
+\newcommand{\colu}[2]{\begin{column}{#1} #2 \end{column}}
+\definecolor{darkGreen}{RGB}{0,127,0}
+\definecolor{darkYellow}{RGB}{127,127,0}
+\definecolor{darkRed}{RGB}{127,0,0}
+\definecolor{darkPurple}{RGB}{127,0,127}
+\newcommand{\ex}{\textbf{Ex: }}
+\newcommand{\exN}[1]{\textbf{Ex #1: }}
+\newcommand{\df}{\textbf{Def: }}
+\newcommand{\pitem}{\pause \item}
+\newcommand{\lstasm}[1]{\lstinputlisting[language={[sparc]Assembler}]{codes/#1}}
+\newcommand{\lstinlineasm}[1]{\lstinline[language={[sparc]Assembler}]{#1}}
+\newcommand{\fri}[2]{\fr{#1}{\ite{#2}}}
+\newcommand{\frc}[2]{\fr{#1}{\begin{columns} #2 \end{columns}}}
+\newcommand{\colui}[2]{\colu{#1}{\ite{#2}}}
+\newcommand{\phrase}[1]{
+  \fr{}{
+  \begin{center}
+    \Huge #1
+  \end{center}
+  }
+}
+\newcommand{\phraseL}[1]{
+  \fr{}{
+  \begin{center}
+    \Large #1
+  \end{center}
+  }
+}
+\newcommand{\alertcolor}{red!60!black}
+\setbeamercolor{alerted text}{fg=\alertcolor}
+\newcommand\tick{{\color{green!50!black} \ding{51}}}
+\newcommand\fail{{\color{red!50!black} \ding{55}}}
+
+\newcommand{\relo}{{\texttt{rel}}}
+\newcommand{\acqo}{{\texttt{acq}}}
+\newcommand{\sco}{{\texttt{sc}}}
+\newcommand{\na}{\texttt{na}}
+\newcommand{\pln}{\texttt{pln}}
+\newcommand{\atm}{\texttt{atm}}
+\newcommand{\ra}{\texttt{ra}}
+\newcommand{\rlx}{\texttt{rlx}}
+%\newcommand{\unord}{\texttt{uno}}
+\newcommand{\relacqo}{{\texttt{relacq}}}
+\newcommand{\rlxmsg}[3]{\tup{#1\mathbin{:}#2\text{\smaller@}#3}}
+\newcommand{\ts}[1]{\color{blue!60!green}{\mbox{\smaller#1}}}
+
+\newcommand{\rlab}{\texttt{R}}
+\newcommand{\wlab}{\texttt{W}}
+\newcommand{\ulab}{\texttt{U}}
+\newcommand{\slab}{\texttt{S}}
+\newcommand{\tlab}{\texttt{T}}
+\newcommand{\valw}{\mathit{val}_{\sf w}}
+\newcommand{\flab}{\texttt{F}}
+
+\newcommand{\dimslide}{
+   \addtooverlay<.(1)->{%
+     \draw[fill=black,opacity=0.70] 
+     (current page.north east) rectangle (current page.south west);
+   }
+}
+\NewDocumentCommand{\dimalert}{r<> m}{%
+\only<#1>{
+\dimslide
+\begin{textblock*}{\textwidth}(0.1\textwidth,0.4\textheight)
+\begin{alertblock}{}
+  \LARGE #2
+\end{alertblock}
+\end{textblock*}
+}
+}
+\newcommand{\cntrd}[1]{ \begin{center} #1 \end{center} }
+
+%% \bibliographystyle{plainurl}% the recommended bibstyle
+%% \bibliographystyle{abbrv}
+\bibliographystyle{apalike}
+%% \bibliography{references,proceedings}
+
+{\setbeamertemplate{footline}{}\setbeamertemplate{headline}{}\frame[plain,noframenumbering]{\titlepage}}
+%% \begin{frame}[plain,noframenumbering]
+%%   \titlepage
+%% \end{frame}
+
+%% \fri{\huge Что нужно для быстрого ПО?}{
+%% \LARGE
+%% \pause
+%% \item \only<-4>{Хороший Алгоритм} \only<5->{\textcolor{gray!30}{Хороший Алгоритм}}
+%% \vfill
+%% \pause
+%% \item \only<-5>{Эффективный}\only<6>{{\bf ?Эффективный?}}\only<7->{{\bf Оптимизирующий}} Компилятор
+%% \vfill
+%% \pause
+%% \item \only<-7>{Производительный}\only<8>{{\bf ?Производительный?}}\only<9->{{\bf Оптимизирующий}} Процессор
+%% }
+
+\section{Контекст}
+
+\subsection{Слабые поведения}
+
+\fr{}{
+\LARGE
+$$\begin{array}{c}
+\uncover<7->{\hspace{12pt} [x] := 0; [y] := 0} \\
+\begin{array}{l||l}
+\only<-10,13->{\inarr{
+  \tikzmark{reorder1} {} [x] := 1;  \\
+  \tikzmark{reorder2} a := [y]
+}}
+\only<11-12>{\inarr{
+  a := [y]; \\
+  {} [x] := 1
+}}
+\uncover<7->{& \inarr{
+  {} [y] := 1; \\
+  b := [x]
+}}
+\end{array}\end{array}$$
+
+\mycallout<2>{green}{(reorder1)}{(-0.5cm, -0.5cm)}{{\bf Компилятор:} \\ Независимые обращения. \\ Можно переупорядочить.}
+\mycallout<3>{blue}{(reorder2)}{(-0.5cm, 1.0cm)}{{\bf Процессор:} \\ Независимые обращения. \\ Можно выполнить не по порядку.}
+
+\dimalert<5>{Всегда ли корректны такие преобразования?}
+
+\only<8-11>{\cntrd{\textcolor{red}{a = b = 0}}}
+
+\dimalert<9>{А если переупорядочить?}
+
+\only<12->{\cntrd{\textcolor{darkGreen}{a = b = 0}}}
+\only<14->{\cntrd{\bf \alert{Такое поведение наблюдается в реальности (например, GCC + x86)!}}}
+
+    \tikz[remember picture, overlay]{ \draw<10,13->[<->,ultra thick] (reorder2) to[out=178,in=182] (reorder1); }
+}
+
+\fri{План}{
+\item Существующие модели
+\item Проблемы C/C++11. OOTA
+}
+
+\section{Постановка задачи}
+
+\section{Операционный вариант модели памяти C/C++11}
+\fr{}{Сначала мы расскажем о той части, которая совпадает в обоих моделях. Потом введем обещания.}
+
+\section{Корректность компиляции}
+
+\section{Результатых работы}
+
+%% \phrase{Подобные поведения многопоточных программ называются {\bf слабыми}}
+%% \phrase{А соответствующие семантики --- {\bf слабыми моделями памяти}\pause.
+%%         Этот доклад про такие модели}
+
+%% \fr{}{
+
+%%   Модели памяти процессоров
+%%   \uncover<2->{
+%%     \ite{
+%%     \item \toGray{7}{8}{x86, \cite{Owens-al:TPHOL09}} \tikzmark{x86}
+%%     \item \toGray{7}{8}{Power, \cite{Alglave-al:TOPLAS14}} \tikzmark{Power}
+%%     \item ARM,\tikzmark{ARM} \cite{Flur-al:POPL16}
+%%     \item ...
+%%     }
+%%   }
+%%   \vfill
+
+%%   Модели памяти ЯП
+%%   \uncover<3->{
+%%     \ite{
+%%     %% \item \toGray{4}{5}{Последовательная консистентность, \cite{Lamport:TC79}}
+%%     \item \toGray{4}{5}{C/C++11, \cite{Batty-al:POPL11}}
+%%     \item \toGray{4}{5}{Java\tikzmark{jmm}, \cite{Manson-al:POPL05}}
+%%     \uncover<5->{ \item ``Обещающая''\tikzmark{Promise} семантика, \cite{Kang-al:POPL17} }
+%%     }
+
+%%     \mycallout<4>{red}{(jmm)}{(-2.0cm, 0.5cm)}{Имеют ряд существенных недостатков}
+%%   }
+
+%%   %% \uncover<6>{%
+%%     \tikz[remember picture, overlay]{
+%%       \draw<6-8>[-,ultra thick]
+%%         let \p1 = (x86) in
+%%         let \p2 = (Power) in
+%%         (\x2, \y1) -- (\x2 ++ 0.5cm, \y1) --
+%%         (\x2 ++ 0.5cm, \y2) -- (\x2, \y2);
+
+%%         \node<7-8>[above right = -0.8cm and 1.0cm of x86, align=left, fill=green!20, rounded corners, draw,rectangle] (e) 
+%%           {Корректность компиляции \\ показана в \cite{Kang-al:POPL17}};
+%%         \node<8>[below right = 0.8cm and 1.0cm of x86, align=left, fill=red!20, rounded corners, draw,rectangle] (f) 
+%%           {Та же схема доказательства \\ не подходит для ARM!};
+%%         \draw<9>[->,red,ultra thick] (Promise) to[out=30,in=-30] (ARM);
+%%     }
+%%   %% }
+%% }
+
+%% \fri{\Huge Результаты данной работы}{
+%% \LARGE
+%%   \item Доказана корректность компиляции подмножества\tikzmark{subset} ``обещающей'' семантики \cite{Kang-al:POPL17}
+%%         в модель ARMv8 \cite{Flur-al:POPL16}
+
+%%   \mycallout<2>[left]{green}{(subset)}{(-0.5cm, 1.0cm)}{Расслабленные (relaxed) \\ чтения и записи,\\
+%%                                                         высвобождающие (release) и \\
+%%                                                         преобретающие (acquire) \\ барьеры памяти}
+
+%%   \onslide<3->{
+%%     \item Формализована модель ARMv8 \cite{Flur-al:POPL16} и доказаны вспомогательные утверждения про неё
+%%   }
+%% }
+
+%% \phrase{Корректность компиляции...\\ \pause Что это значит?}
+
+%% %% \fr{\LARGE Корректность компиляции (1/2)}{
+%% %%   \LARGE
+
+%% %%   $\onslide<3->{compile :} \tikzmark{proglang}S \onslide<3->{\rightarrow} \tikzmark{hardlang}\onslide<2->{T}$\\
+%% %%   \onslide<4->{
+%% %%   $\onslide<6->{\forall Prog \in S.}$ \\
+%% %%   ${} \quad \onslide<5->{\semState{\onslide<6->{compile(\tikzmark{hardsem}Prog)}}{T}}$
+%% %%   $\onslide<6->{\subseteq}$
+%% %%   $\semState{\onslide<6->{Prog}\tikzmark{progsem}}{S}$.
+%% %%   }
+
+%% %%   \mycallout<1>{green}{(proglang)}{(0.0cm, 1.0cm)}{Исходный язык}
+%% %%   \mycallout<2>{green}{(hardlang)}{(0.0cm, 1.0cm)}{Целевой язык}
+
+%% %%   \mycallout<4>{green}{(progsem)}{( 1.0cm, 1.0cm)}{Модель Памяти исходного языка}
+%% %%   \mycallout<5>{green}{(hardsem)}{(-1.0cm, 1.0cm)}{Модель Памяти целевого языка}
+%% %% }
+
+%% %% \phrase{И ``обещающая'', и ARMv8- семантики заданы {\bf операционно}:}
+  
+%% \fr{\huge Корректность компиляции из $S$ в $T$}{
+%%   \LARGE
+%%   $\onslide<2->{\forall \tikzmark{prog}Prog \in Syntax,}$ \\
+%%   \onslide<3->{${} \;\; \{t_j\}_{j \in [1..k]}$ --} \tikzmark{hardlang}$T$\onslide<3->{-исполнение}
+%%          \tikzmark{cprog}\only<2-7>{$compile(Prog)$}\only<8->{$Prog$}\onslide<3->{.} \\
+%%   \onslide<4->{${} \quad \exists \{s_i\}_{i \in [1..n]}$ --} \tikzmark{proglang}$S$\onslide<4->{-исполнение $Prog$,} \\
+%%   \onslide<5->{${} \quad s_n \tikzmark{stateeq}\simeq t_k.$}
+
+%%   \mycallout<1>{green}{(proglang)}{(0.0cm, 1.0cm)}{Исходная модель}
+%%   \mycallout<1>{green}{(hardlang)}{(0.0cm, -1.0cm)}{Целевая модель}
+%%   \mycallout<2>{green}{(prog)}{(-2.0cm, -1.0cm)}{Исходная программа}
+%%   \mycallout<2>{green}{(cprog)}{(0.0cm, 1.0cm)}{Результат компиляции}
+%%   \mycallout<6>{green}{(stateeq)}{(-2.0cm, 1.0cm)}{e.g., финальное состояние \\ памяти совпадает}
+%%   \mycallout<7>{yellow}{(cprog)}{(0.0cm, 1.0cm)}{Рассматриваем $compile = id$}
+%% }
+
+%% %% \phrase{А в случае \\ ``обещающей'' и ``ARM''- семантик?}
+
+%% %% \fr{\huge Корректность компиляции \\ из $Promise$ в $ARM$}{
+%% %%   \LARGE
+%% %%   $\forall Prog \in Syntax,$ \\
+%% %%   ${} \quad\{a_j\}_{j \in [1..k]}$ -- $ARM$-исполнение \only<2->{$Prog$.}\\
+%% %%   \only<1>{${} \quad \quad com\tikzmark{cprog}pile(Prog)$. \\} %%   ${} \quad \exists \{p_i\}_{i \in [1..n]}$ -- $Promise$-исполнение $Prog$, \\
+%% %%   ${} \quad p_n \tikzmark{stateeq}\simeq a_k.$
+%% %% }
+
+%% \phrase{Стандартная техника --- симуляция}
+
+%% \fr{\huge Пример симуляции}{
+%%   \cntrd{
+%%   \begin{tikzpicture}
+%%     \fill<-1>[gray!40!white , draw=black] (1,0) rectangle (2,1);
+%%     \fill<2->[green!40!white, draw=black] (1,0) rectangle (2,1);
+
+%%     \fill<-3>[gray!40!white , draw=black] (2,0) rectangle (3,1);
+%%     \fill<4->[green!40!white, draw=black] (2,0) rectangle (3,1);
+
+%%     \fill<-5>[gray!40!white , draw=black] (3,0) rectangle (4,1);
+%%     \fill<6->[green!40!white, draw=black] (3,0) rectangle (4,1);
+
+%%     \fill<-7>[gray!40!white , draw=black] (4,0) rectangle (5,1);
+%%     \fill<8->[green!40!white, draw=black] (4,0) rectangle (5,1);
+
+%%     \fill<- 9>[gray!40!white , draw=black] (5,0) rectangle (6,1);
+%%     \fill<10->[green!40!white, draw=black] (5,0) rectangle (6,1);
+
+%%     \node[opacity=.6] at (3.5,0.5) {\LARGE $Prog$};
+
+%%     \draw<1,2>[->,ultra thick] (1,-0.4) -- (1,0);
+%%     \node<1,2> at (1,-0.8) {\LARGE $S$};
+
+%%     \draw<3,4>[->,ultra thick] (2,-0.4) -- (2,0);
+%%     \node<3,4> at (2,-0.8) {\LARGE $S$};
+
+%%     \draw<5,6>[->,ultra thick] (3,-0.4) -- (3,0);
+%%     \node<5,6> at (3,-0.8) {\LARGE $S$};
+
+%%     \draw<7,8>[->,ultra thick] (4,-0.4) -- (4,0);
+%%     \node<7,8> at (4,-0.8) {\LARGE $S$};
+
+%%     \draw<9,10>[->,ultra thick] (5,-0.4) -- (5,0);
+%%     \node<9,10> at (5,-0.8) {\LARGE $S$};
+
+%%     \draw<11>[->,ultra thick] (6,-0.4) -- (6,0);
+%%     \node<11> at (6,-0.8) {\LARGE $S$};
+%%   \end{tikzpicture}
+%%   }
+
+%%   Инвариант
+%%   \onslide<2,4,6,8,10>{\textcolor{red}{не}}
+%%   \only<2,4,6,8,10>{\textcolor{red}{выполняется}}\only<1,3,5,7,9,11>{\textcolor{darkGreen}{выполняется}}
+  
+%%   \vspace{1cm}
+%%   \hrule
+%%   \vspace{1cm}
+  
+%%   \begin{columns}
+
+%%   \colu{.4\textwidth}{
+%%     \begin{tikzpicture}
+%%       \fill[green!40!white, draw=black] (0,0) rectangle (1,1);
+%%       \node[right] at (1.2,0.5) {-- выполнено $T$};
+%%     \end{tikzpicture}
+%%   }
+
+%%   \colu{.4\textwidth}{
+%%     $S$ -- исходная модель\\
+%%     $T$ -- целевая модель\\
+%%   }
+
+%%   \end{columns}
+%% }
+
+%% %% \fr{\huge Пример симуляции}{
+%% %%   %% \cntrd{
+%% %%   \begin{tikzpicture}
+%% %%     \node at (3.7,2.2) {Состояние целевой машины};
+%% %%     \draw[rounded corners] (-1,2.0) rectangle (6.2,4.2);
+%% %%     \fill[gray!40!white, draw=black] (1,3) rectangle (2,4);
+%% %%     \fill[gray!40!white, draw=black] (2,3) rectangle (3,4);
+%% %%     \fill[gray!40!white, draw=black] (3,3) rectangle (4,4);
+%% %%     \fill[gray!40!white, draw=black] (4,3) rectangle (5,4);
+%% %%     \fill[gray!40!white, draw=black] (5,3) rectangle (6,4);
+
+%% %%     \node at (-1,0.5) {Исходная машина};
+%% %%     \fill[gray!40!white, draw=black] (1,0) rectangle (2,1);
+%% %%     \fill[gray!40!white, draw=black] (2,0) rectangle (3,1);
+%% %%     \fill[gray!40!white, draw=black] (3,0) rectangle (4,1);
+%% %%     \fill[gray!40!white, draw=black] (4,0) rectangle (5,1);
+%% %%     \fill[gray!40!white, draw=black] (5,0) rectangle (6,1);
+    
+%% %%     \node[opacity=.6] at (3.5,3.5) {\LARGE $compile(Prog)$};
+%% %%     \node[opacity=.6] at (3.5,0.5) {\LARGE $Prog$};
+%% %%     \node[left] at (4, -2) {Инвариант};
+%% %%     %% \node[left] at (6.8, -2) {\textcolor{red}{не выполняется}};
+%% %%     \node[left] at (6.3, -2) {\textcolor{darkGreen}{выполняется}};
+%% %%   \end{tikzpicture}
+%% %%   %% }
+%% %% }
+
+%% \fr{}{
+%% \huge
+%% ...но симуляция напрямую не применина в нашем случае\pause:
+%%   \iteN{
+%%     \LARGE
+%%     \item ARM выполняет инструкции не по порядку;
+%%     \item ``Обещающая'' семантика имеет больше явных ограничений.
+%%   }
+%% }
+
+%% \fr{\huge План доказательства}{
+%%   \LARGE
+%%   \iteN{
+%%     \pause
+%%     \item \toGray{5}{6}{Вводим промежуточную семантику ARM+$\tau$}
+%%     \pause
+%%     \ite{
+%%       \Large
+%%       \item \toGray{5}{6}{обладает явными ограниченями, похожими на ``обещающую'' семантику;}
+%%     }
+%%     \pause
+%%     \item \toGray{5}{6}{Доказываем бисимуляцию между ARM+$\tau$ и ARM;}
+%%     \pause
+%%     \item Показываем ``запаздывающую'' симуляцию ARM+$\tau$ ``обещающей'' семантикой.
+%%   }
+%% }
+
+%% \fr{\huge ``Запаздывающая'' симуляция}{
+%%   \cntrd{
+%%   \begin{tikzpicture}
+%%     \fill<-1>[gray!40!white , draw=black] (1,0) rectangle (2,1);
+%%     \fill<2->[green!40!white, draw=black] (1,0) rectangle (2,1);
+
+%%     \fill<-5,7-9>[gray!40!white , draw=black] (2,0) rectangle (3,1);
+%%     \fill<6,10>[yellow!40!white, draw=black] (2,0) rectangle (3,1);
+%%     \fill<11->[green!40!white, draw=black] (2,0) rectangle (3,1);
+
+%%     \fill<-4>[gray!40!white , draw=black] (3,0) rectangle (4,1);
+%%     \fill<5-8>[yellow!40!white, draw=black] (3,0) rectangle (4,1);
+%%     \fill<9->[green!40!white, draw=black] (3,0) rectangle (4,1);
+
+%%     \fill<-7>[gray!40!white , draw=black] (4,0) rectangle (5,1);
+%%     \fill<8->[green!40!white, draw=black] (4,0) rectangle (5,1);
+
+%%     \fill<-3>[gray!40!white , draw=black] (5,0) rectangle (6,1);
+%%     \fill<4->[green!40!white, draw=black] (5,0) rectangle (6,1);
+
+%%     \node[opacity=.6] at (3.5,0.5) {\LARGE $Prog$};
+
+%%     \draw<1,2>[->,ultra thick] (1,-0.4) -- (1,0);
+%%     \node<1,2> at (1,-0.8) {\LARGE $Promise$};
+
+%%     \draw<3-11>[->,ultra thick] (2,-0.4) -- (2,0);
+%%     \node<3-11> at (2,-0.8) {\LARGE $Promise$};
+
+%%     \draw<12>[->,ultra thick] (3,-0.4) -- (3,0);
+%%     \node<12> at (3,-0.8) {\LARGE $Promise$};
+
+%%     \draw<13>[->,ultra thick] (4,-0.4) -- (4,0);
+%%     \node<13> at (4,-0.8) {\LARGE $Promise$};
+
+%%     \draw<14>[->,ultra thick] (5,-0.4) -- (5,0);
+%%     \node<14> at (5,-0.8) {\LARGE $Promise$};
+
+%%     \draw<15>[->,ultra thick] (6,-0.4) -- (6,0);
+%%     \node<15> at (6,-0.8) {\LARGE $Promise$};
+%%   \end{tikzpicture}
+%%   }
+
+%%   Инвариант: ``обещающая'' машина
+%%   \only<2,11-14>{\textcolor{darkGreen}{исполняется}}\only<1,3-10,15->{\textcolor{darkGreen}{ждёт}}
+  
+%%   \vspace{0.5cm}
+%%   \hrule
+%%   \vspace{0.5cm}
+  
+%%   %% \begin{columns}
+
+%%   %% \colu{.4\textwidth}{
+%%     \begin{tikzpicture}
+%%       \fill[green!40!white, draw=black] (0,0) rectangle (1,1);
+%%       \node[right] at (1.2,0.5) {-- выполнено $ARMv8$};
+
+%%       \fill[yellow!40!white, draw=black] (0,1.5) rectangle (1,2.5);
+%%       \node[right] at (1.2,2.0) {-- частично выполнено $ARMv8$};
+%%     \end{tikzpicture}
+%%   %% }
+
+%%   %% \colu{.4\textwidth}{
+%%     $Promise$ -- ``обещающая'' модель\\
+%%     %% $ARM$ -- целевая модель\\
+%%   %% }
+
+%%   %% \end{columns}
+%% }
+
+%% %% \fr{\huge ``Запаздывающая'' симуляция (1/3)}{
+%% %%   \LARGE
+%% %%   Базовое отношение на состояниях $\simrelBase \subset \ARMt_{state} \times \Promise_{state}:$ \\
+%% %%   \light{$\simrelBase \triangleq$ $\invCf$ $\cap \invPrefix$ $\cap \invMem$ $\cap \invView$ $\cap \invState$.}
+%% %% }
+
+%% %% \fr{\huge ``Запаздывающая'' симуляция (2/3)}{
+%% %%   \LARGE
+%% %%   $\invPromUptoARM(\aT,\p) \triangleq$ \\
+%% %%   ${} \quad \forall \tId, \invPromUptoARMtId(\tId,\aT,\p)$; \\
+%% %%   $\simrel \triangleq \simrelBase \cap \invPromUptoARM$ \\
+%% %%   \vfill
+%% %%   \pause
+%% %%   $\invPromUptoARMnot(\aT,\p) \triangleq$ \\
+%% %%   ${} \quad \exists! \tId, \lnot \invPromUptoARMtId(\tId,\aT,\p)$; \\
+%% %%   $\simrelPre \triangleq \simrelBase \cap \invPromUptoARMnot$
+%% %% }
+
+%% \fr{\huge ``Запаздывающая'' симуляция. Формально}{
+%% \tiny
+
+%% {\bf Лемма 1:}  \\
+%% $\forall (\aT, \p) \in \simrelPre, \exists \p', \p \promStep \p', (\aT, \p') \in \simrelPre \cup \simrel$.
+
+%% \vfill
+%% {\bf Лемма 2:}  \\
+%% $\forall (\aT, \p) \in \simrelPre, \exists n, \{\p_i\}_{i \in [0, n]}, \p_0 = \p, (\forall i < n, \p_i \promStep \p_{i+1})$,\\
+%% ${} \quad (\forall i < n, (\aT, \p_i) \in \simrelPre), (\aT, \p_n) \in \simrel$.\\
+
+%% \vfill
+%% {\bf Лемма 3:}  \\
+%% $\forall (\aT, \p) \in \simrel$,\\
+%% ${} \quad (\forall \aT', \aT \armStepgen{\lnot \; \transenv{Write commit}} \aT' \Rightarrow (\aT', \p) \in \simrelPre \cup \simrel) \land$\\
+%% ${} \quad (\forall\aT', \aT \armStepgen{\transenv{Write commit}} \aT' \Rightarrow \exists \p', \p \promStepgen{\transenv{Promise write}} \p',  (\aT', \p') \in \simrelPre \cup \simrel)$.
+
+%% \vfill
+%% {\bf Лемма 4:}  \\
+%% $\forall (\aT, \p) \in \simrel, \aT', \aT \armStep \aT' \Rightarrow$ \\
+%% ${} \quad {} \exists \p', \p \promStep^{*} \p', (\aT', \p') \in \simrel$.
+
+%% \vfill
+%% {\bf Теорема:} \\
+%% $\begin{array}{l}
+%%   \forall \Cfprom, %\Cfarm = compilation(\Cfprom), \\
+%%   \{\aT_i\}_{i \in [0..n]}, \\
+%%   \quad \ainit(compile(\Cfarm)) = \aT_0 \armStep \dots \armStep \aT_n, \finalStateA(\aT_n),\\
+%%   \exists \{\p_i\}_{i \in [0..k]}, \\
+%%   \quad \pinit(\Cfprom) = \p_0 \promStep \dots \promStep \p_k, \finalStateProm(\p_k), \\
+%%   \sameMemory(\aT_n, \p_k). \\
+%% \end{array}$
+%% }
+
+%% %% \begin{frame}[plain]
+%% %%  \cntrd{
+%% %%    \shadowimage[width=.9\linewidth]{paperScreenshot.pdf}
+%% %%  }
+%% %% \end{frame}
+
+
+%% \fr{\huge Планы на будущее}{
+%% \ite{
+%%   \LARGE
+%%   \item Поддержка остальных конструкций ``обещающей'' семантики \\
+%%         {\normalsize \light{(Read-Modify-Writes, Release/Acquire accesses, SC fences)}}
+%%   \vfill
+%%   \item Механизация доказательства в Coq
+%% }
+
+%% \vfill
+%% \pause
+%% \cntrd{\huge \it \textcolor{red}{Спасибо!}}
+%% }
+
+%% \begin{frame}[allowframebreaks]{Ссылки}
+%% %% \bibliographystyle{abbrv}
+%% \scriptsize
+%% \bibliography{references,proceedings}
+%% \end{frame}
+
+%% \phrase{The first step is a {\bf formal semantics}}
+%% \phraseL{
+%%   {\Huge PL semantics should}
+%%   \vfill
+%%   \ite{
+%%     \pitem allow \alert{efficient implementation}; \\
+%%     \pause (x86, Power, ARM)
+%%     \pitem validate \alert{compiler optimizations}; \\
+%%     \pause (merging, rearranging, etc)
+%%     \pitem allow \alert{high-level reasoning}. \\
+%%     %% \pitem avoid \alert{``undefined behavior''}.
+%%   }
+%% }
+
+%% \fr{}{
+%% \begin{center}
+%% \begin{tabular}{l | l | l | l}
+%%              & Eff. Impl. & Comp. Opt. & H.-l. Reasoning \\ % & No UB \\
+%%              \hline
+%% Lamport's SC & \fail      & \fail  & \tick \\ % & \tick \\
+%% C/C++11 MM   & \tick      & \tick  & \fail \\ % ~ (OOTA) \\ % & \fail \\
+%% Java    MM   & \tick      & \fail  & \tick \pause \\ % & \tick \pause \\
+%% \multicolumn{4}{l}{} \\
+%% \multicolumn{4}{l}{{\bf A promising semantics}} \\
+%% \cite{Kang-al:POPL17} & \tick & \tick & \tick \\ % \tick \\
+%% \end{tabular}
+%% \end{center}
+%% }
+
+%% \fr{}{
+
+%% {\Large The Promise machine \cite{Kang-al:POPL17} is {\bf proved} to be {\bf compilable} to
+%% x86 and Power.} \\
+
+%% \pause
+%% {\bf Sketch of the proof}:
+%% \ite{
+%%   \pitem x86 = SC + transformations, \\
+%%          Power = ``StrongPower'' + transformations \cite{Lahav-Vafeiadis:FM16};
+%%   \pitem the transformations are proved to be {\bf sound} in the Promise machine;
+%%   \pitem For every program, SC behaviors $\subset$ ``StrongPower'' behaviors $\subset$
+%%          behaviors of an axiomatic promise-free version of the Promise machine.
+%% }
+
+%% \pause
+
+%% \only<6->{
+%% \dimslide
+%% \begin{textblock*}{\textwidth}(0.1\textwidth,0.4\textheight)
+%% \begin{alertblock}{}
+%%   \LARGE
+%%   The proof scheme isn't applicable to {\bf ARM}
+%%   \onslide<7->{ \\ and here is why:}
+%% \end{alertblock}
+%% \end{textblock*}
+%% }
+
+%% %% \pause but has {\bf not} been proved for {\bf ARM}\pause,
+%% %% and the {\bf same proof} techique is {\bf not applicable}.
+%% }
+
+%% \fr{}{
+%% \LARGE
+%% $$\begin{array}{c}
+%% [x] := 0; [y] := 0 \\
+%% \begin{array}{l||l||l}
+%% \inarr{
+%%   a := [x]; \uncover<2->{\comment{1}} \tikzmark{comment} \\
+%%   {} [x] := 1
+%% } &
+%% \inarr{
+%%   b := [x]; \\
+%%   {} [y] := b
+%% } &
+%% \inarr{
+%%   c := [y]; \\
+%%   {} [x] := c \\
+%% }
+%% \end{array}\end{array}$$
+
+%% \mycallout<2>{green}{(comment)}{(-0.5cm, -1.0cm)}{Allowed by ARMv8 \cite{Flur-al:POPL16}}
+
+%% \onslide<3>{
+%% \begin{alertblock}{}
+%% The behavior cannot be explained by transformations over a strong enough model.
+%% \end{alertblock}
+%% }
+%% }
+
+%% \fr{\LARGE Compilation scheme}{
+%%   \huge
+%%   \[\begin{array}{l | l}
+%%     \Promise & \ARM \\
+%%     \hline
+%%     [x]_{\sf rlx} := a & [x] := a \\
+%%     a := [x]_{\sf rlx} & a := [x] \\
+%%     \hline
+%%     \acqFence & \dmb \; \LD \\
+%%     \relFence & \dmb \; \SY \\
+%%   \end{array}\]
+%% %% \pause
+
+%% \only<2->{
+%% \dimslide
+%% \begin{textblock*}{\textwidth}(0.1\textwidth,0.4\textheight)
+%% \begin{alertblock}{}
+%%   \LARGE
+%%   As the compilation scheme is bijection, we use {\bf one} syntax in
+%%   examples.
+%% \end{alertblock}
+%% \end{textblock*}
+%% }
+%% }
+
+%% \fr{\LARGE Example 1}{
+%% \LARGE
+%% $$\begin{array}{c}
+%% \markExecuted{4}{5}{[x] := 0; [y] := 0} \\
+%% \begin{array}{l||l}
+%% \inarr{
+%%   {} \markExecuted{5}{6}{[x] := 1}; \\
+%%   {} \markExecuted{6}{7}{[y] := 1}
+%% } &
+%% \inarr{
+%%   \markExecuted{7}{8}{a := [y]};   \uncover<2-3,15->{\comment{1}} \\
+%%   \markExecuted{8}{9}{b := [x]} \; \uncover<3,16->  {\comment{0}}
+%% }
+%% \end{array}\end{array}$$
+
+%%   \uncover<4->{
+%%     \Large
+%%     \cntrd{
+%%     \begin{tikzpicture}[scale = 0.8, transform shape]
+%%       \storageTwoThreads{1}{2}
+%%       \node<6-9>[right] at (1, -0.1) {$[x] := 1$};
+%%       \node<7-9>[right] at (1,  0.7) {$[y] := 1$};
+%%       \node<8-12>[right] at (3.5, -0.1) {$a := [y]$};
+%%       \node<9-13>[right] at (3.5,  0.7) {$b := [x]$};
+
+%%       \node<10-16>[right] at (1,  0.7) {$[x] := 1$};
+%%       \node<10>   [right] at (1, -0.1) {$[y] := 1$};
+
+%%       \node<11>   [right] at (2.25, -1.4) {$[y] := 1$};
+%%       \node<13-14>[right] at (2.25, -1.4) {$a := [y]$};
+%%       \node<14-15>[right] at (2.25, -0.8) {$b := [x]$};
+
+%%       \node<17>   [right] at (2.25, -1.4) {$[x] := 1$};
+
+%%       \node<5-11>  at (2.25, -2.7) {$[x] := 0; [y] := 0$};
+%%       \node<12-17> at (2.25, -2.7) {$[x] := 0; [y] := 1$};
+%%       \node<18->   at (2.25, -2.7) {$[x] := 1; [y] := 1$};
+%%     \end{tikzpicture}
+%%     }
+%%   }
+%% }
+
+%% \fr{\LARGE Example 2}{
+%% \LARGE
+%% $$\begin{array}{c}
+%% \markExecuted{4}{5}{[x] := 0; [y] := 0} \\
+%% \begin{array}{l||l}
+%% \inarr{
+%%   \markExecuted{5}{6}{[x] := 1}; \\
+%%   \markExecuted{6}{7}{\tikzmark{dmbsy} \dmb ~\SY}; \\
+%%   \markExecuted{7}{8}{[y] := 1}
+%% } &
+%% \inarr{
+%%   \markExecuted{8}{9}{a := [y]}; \uncover<2-3>{\comment{1}} \\
+%%   \dmb \tikzmark{dmbld} ~\LD; \\
+%%   b := [x] \; \uncover<3>  {\nocomment{0}}
+%% }
+%% \end{array}\end{array}$$
+
+%%   \uncover<4->{
+%%     \Large
+%%     \cntrd{
+%%     \begin{tikzpicture}[scale = 0.8, transform shape]
+%%       \storageTwoThreads{1.5}{2}
+%%       \node<6->[right] at (1, -0.1) {$[x] := 1$};
+%%       \node<7->[right] at (1,  0.5) {$\dmb ~\SY$};
+%%       \node<8->[right] at (1,  1.1) {$[y] := 1$};
+%%       %% \node<7-9>[right] at (1,  0.7) {$[y] := 1$};
+%%       \node<9->[right] at (3.5, -0.1) {$a := [y]$};
+%%       %% \node<9-13>[right] at (3.5,  0.7) {$b := [x]$};
+
+%%       %% \node<10-16>[right] at (1,  0.7) {$[x] := 1$};
+%%       %% \node<10>   [right] at (1, -0.1) {$[y] := 1$};
+
+%%       %% \node<11>   [right] at (2.25, -1.4) {$[y] := 1$};
+%%       %% \node<13-14>[right] at (2.25, -1.4) {$a := [y]$};
+%%       %% \node<14-15>[right] at (2.25, -0.8) {$b := [x]$};
+
+%%       %% \node<17>   [right] at (2.25, -1.4) {$[x] := 1$};
+
+%%       \node<5->  at (2.25, -2.7) {$[x] := 0; [y] := 0$};
+%%     \end{tikzpicture}
+%%     }
+%%   }
+
+%%   \mycallout<10>{red}{(dmbsy)}{(-0.5cm, -1.0cm)}{Prevents reordering}
+%%   \mycallout<11>{red}{(dmbld)}{(-0.5cm, -1.0cm)}{Forbids issuing until \\ $a := [y]$ is satisfied}
+%% }
+
+%% \fr{Example 3} {
+%% % TODO: decrease slide numbers > 2 by 1.
+%% \LARGE
+%% $$\begin{array}{c}
+%% \hspace{12pt} \markExecuted{4}{5}{[x] := 0; [y] := 0} \\
+%% \begin{array}{l||l||l}
+%% \inarr{
+%%   \markExecuted{5}{6}{a := [x]}; \uncover<2,26->{\comment{1}} \tikzmark{comment} \\
+%%   \markExecuted{6}{7}{[x] := 1}
+%% } &
+%% \inarr{
+%%   \markExecuted{9}{10}{b := [x]}; \uncover<12->{\comment{1}} \\
+%%   \markExecuted{12}{13}{[y] := b}
+%% } &
+%% \inarr{
+%%   \markExecuted{18}{19}{c := [y]};  \uncover<21->{\comment{1}} \\
+%%   \markExecuted{21}{22}{[x] := c}} \\
+%% \end{array}\end{array}$$
+
+%% \uncover<4->{
+%%   \Large
+%%   \begin{center}
+%%   \begin{tikzpicture}[scale = 0.8, transform shape]
+%%     \storageThreeThreads{1.2}{1.8}{1.2}
+%%     \node<7-8>[right] at (1.0,  0.15) {$[x] := 1$};
+%%     \node<6-7>[right] at (1.0, -0.4 ) {$a := [x]$};
+
+%%     \node<10>[right] at (5.0, -0.125) {$b := [x]$};
+%%     \node<13>[right] at (5.0, -0.125) {$[y] := \progval{1}$};
+
+%%     \node<11>[right] at (3.0, -1.0 ) {$b := [x]$};
+%%     \node<9-14>[right] at (3.0, -1.55) {$[x] := 1$};
+%%     \node<8-15>[right] at (3.0, -2.1 ) {$a := [x]$};
+
+%%     \node<14> [right] at (3.0, -1.0 ) {$[y] := \progval{1}$};
+%%     \node<15> [right] at (3.0, -1.55) {$[y] := \progval{1}$};
+%%     \node<15-26>[right] at (3.0, -1.0 ) {$[x] := 1$};
+%%     \node<16> [right] at (3.0, -2.1 ) {$[y] := \progval{1}$};
+%%     \node<16-24>[right] at (3.0, -1.55) {$a := [x]$};
+
+%%     \node<17> [right] at (5.75, -3.0) {$[y] := \progval{1}$};
+    
+%%     \node<19>[right] at (8.5, -0.125) {$c := [y]$};
+%%     \node<20>[right] at (5.75, -3.0 ) {$c := [y]$};
+
+%%     \node<22>[right] at (8.5, -0.125) {$[x] := \progval{1}$};
+%%     \node<23>[right] at (5.75, -3.0 ) {$[x] := \progval{1}$};
+
+%%     \node<25>[right] at (5.75, -3.0) {$a := [x]$};
+%%     \node<27>[right] at (5.75, -3.0) {$[x] := 1$};
+
+%%     \node<5-17> at (5.75, -0.2 -1.2 - 1.8 - 1.2) {$[x] := 0; [y] := 0$};
+%%     \node<18-23> at (5.75, -0.2 -1.2 - 1.8 - 1.2) {$[x] := 0; [y] := \progval{1}$};
+%%     \node<24-27> at (5.75, -0.2 -1.2 - 1.8 - 1.2) {$[x] := \progval{1}; [y] := \progval{1}$};
+%%     \node<28-> at (5.75, -0.2 -1.2 - 1.8 - 1.2) {$[x] := 1; [y] := \progval{1}$};
+%%   \end{tikzpicture}
+%%   \end{center}
+%% }
+%% }
+
+%% \fr{Simulation}{
+%%   \LARGE
+%%   \iteN{
+%%     \item  Introduce $SimInvariant : T_{State} \times S_{State}$;
+%%     \pitem Show that \\
+%%     $\forall t, t' \in T_{State}, s \in S_{State}.$ \\
+%%     \pause
+%%     $\quad correct(t), t \xrightarrow[T]{} t', SimInvariant(t, s)$, \\
+%%     \pause
+%%     $\exists s' \in S_{State}. s \xrightarrow[S]{}^{*} s', SimInvariant(t', s')$.
+%%   }
+%% }
+
+%% \fri{\LARGE The ARM+$\tau$ machine}{ 
+%%   \LARGE
+%%   \item Add $\tau$-map component to the ARM state;
+%%   \item Modify {\bf Write Commit} rule;
+%%   \item Modify {\bf Propagate} rule.
+%% }
+
+%% \fr{\LARGE ARM+$\tau$ simulates ARM}{ 
+%% \Large
+%% $\forall \Cfarm, \{\s_i\}_{i \in [0..n]}$, \\ \pause
+%% $\quad \sinit(\Cfarm) = \s_0 \armStepP \dots \armStepP \s_n, \finalStateP(\s_n)$,\\ \pause
+%% $\exists \{\aT_i | \s_i = \armState{\aT_i} \}_{i \in [0..n]}$, \\
+%% ${} \quad {} \aT_0 \armStep \dots \armStep \aT_n$.
+
+%% \vfill
+
+%% \pause
+%% {\bf Sketch of the proof:}
+%% \ite{
+%%   \pitem Construct an order on writes from $\s_n$;
+%%   \pitem Show $\s_i$ doesn't contradict the order for all $i$;
+%%   \pitem Show the order may coincide with $\tau$s in $\{\aT_i\}_{i \in [0..n]}$.
+%% }
+%% }
+
+\end{document}

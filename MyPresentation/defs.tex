@@ -1,0 +1,435 @@
+  \newcommand\ARM{\mathrm{ARM}}
+  \newcommand\ARMt{\mathrm{ARM}{+}\tau}
+  \newcommand\Promise{\mathrm{Promise}}
+
+\newcommand{\tstamp}[1]{\mbox{\small\color{brown!60!black}\bf{#1}}}
+
+\newcommand{\OrdPrevRequest}{\textup{\sf prev-Ord-req}}
+
+\newcommand{\uniqueTimeLoc}{\textup{\sf uniq-time-loc}}
+\newcommand{\ordPrevRequest}{\textup{\sf ord-prev-req}}
+\newcommand{\coherentThread}{\textup{\sf coherent-thread}}
+\newcommand{\timeRangeCondition}{\textup{\sf time-range}}
+\newcommand{\sameMemory}{\textup{\sf same-memory}}
+
+\newcommand{\prevInstrCommitted}{\textup{\sf prev-instr-committed}}
+\newcommand{\prevReadsCommitted}{\textup{\sf prev-reads-committed}}
+\newcommand{\prevFencesCommitted}{\textup{\sf prev-fences-committed}}
+\newcommand{\prevBrCommitted}{\textup{\sf prev-branches-committed}}
+\newcommand{\prevBrFencesCommitted}{\textup{\sf prev-branches-and-fences-committed}}
+\newcommand{\prevCmdDetermined}{\textup{\sf prev-fully-determined}}
+\newcommand{\prevNoRestart}{\textup{\sf no-prev-restartable-reads-from-loc}}
+\newcommand{\noFollowingWcom}{\textup{\sf no-following-com-writes-to-loc}}
+\newcommand{\checkReorderings}{\textup{\sf check-reorderings}}
+
+\newcommand{\deleteUpdReads}{\textup{\sf delete-upd-reads}}
+\newcommand{\acceptRequest}{\textup{\sf accept-request}}
+
+\newcommand{\readsBetweenCommitted}{\textup{\sf reads-in-between-committed}}
+\newcommand{\noWritesBetween}{\textup{\sf no-writes-to-loc-in-between}}
+\newcommand{\noDiffReadsBetween}{\textup{\sf no-different-write-reads-in-between}}
+\newcommand{\samePropagated}{\textup{\sf propagated-to-same-threads}}
+\newcommand{\fullyPropagated}{\textup{\sf fully-propagated}}
+\newcommand{\getNewTapeCell}{\textup{\sf get-new-tapecell}}
+\newcommand{\prevReadFromOther}{\textup{\sf prev-read-from-other-write}}
+%\newcommand{\nextPath}{\textup{\sf next-path}}
+\newcommand{\tapeUpdRestart}{\textup{\sf tape-upd-restart}}
+\newcommand{\tapeUpdWcom}{\textup{\sf tape-upd-Wcom}}
+\newcommand{\tapeUpdRsat}{\textup{\sf tape-upd-Rsat}}
+\newcommand{\tapeUpdIf}{\textup{\sf tape-upd-IfGoto}}
+
+
+
+%% PROBLEMS WITH: \C, \next, \a
+  \newcommand\armStepWriteCommit{\armStepgen{\transenv{Write commit} \; \tId \; \cpath \; x \; \stval \; \tau}}
+  \newcommand\armStepWriteCommitPrime{\armStepgen{\transenv{Write commit} \; \tId' \; \cpath' \; y \; \stval' \; \tau}}
+  \newcommand\armStepWriteCommitP{\armStepPgen{\transenv{Write commit} \; \tId \; \cpath \; x \; \stval}}
+  \newcommand\armStepWriteCommitPrimeP{\armStepPgen{\transenv{Write commit} \; \tId' \; \cpath' \; y \; \stval'}}
+
+
+  \newcommand\promStepBranch{\promStepgen{\transenv{Branch commit} \; \tId}}
+  \newcommand\promTStepBranch{\promTStepgen{\transenv{Branch commit}}}
+
+  \newcommand\promStepAcquire{\promStepgen{\transenv{Acquire fence commit} \; \tId}}
+  \newcommand\promTStepAcquire{\promTStepgen{\transenv{Acquire fence commit}}}
+  \newcommand\promStepRelease{\promStepgen{\transenv{Release fence commit} \; \tId}}
+  \newcommand\promTStepRelease{\promTStepgen{\transenv{Release fence commit}}}
+
+  \newcommand\promStepRead{\promStepgen{\transenv{Read from memory} \; \tId \; \writeEvt{x}{\stval}{\tau}{\R}}}
+  \newcommand\promTStepRead{\promTStepgen{\transenv{Read from memory} \; \writeEvt{x}{\stval}{\tau}{\R}}}
+
+  \newcommand\promStepPromise{\promStepgen{\transenv{Promise write} \; \tId \; \writeEvt{x}{\stval}{\tau}{\R}}}
+  \newcommand\promStepPromiseRPrime{\promStepgen{\transenv{Promise write} \; \tId \; \writeEvt{x}{\stval}{\tau}{\R'}}}
+  \newcommand\promTStepPromise{\promTStepgen{\transenv{Promise write} \; \writeEvt{x}{\stval}{\tau}{\R}}}
+
+  \newcommand\promStepFulfill{\promStepgen{\transenv{Fulfill promise} \; \tId \; \writeEvt{x}{\stval}{\tau}{\R}}}
+  \newcommand\promTStepFulfill{\promTStepgen{\transenv{Fulfill promise} \; \writeEvt{x}{\stval}{\tau}{\R}}}
+
+  \newcommand\promStepAssign{\promStepgen{\transenv{Local variable assignment} \; \tId}}
+  \newcommand\promTStepAssign{\promTStepgen{\transenv{Local variable assignment}}}
+
+  \newcommand\promStepNop{\promStepgen{\transenv{Execution of $\nop$} \; \tId}}
+  \newcommand\promTStepNop{\promTStepgen{\transenv{Execution of $\nop$}}}
+
+  \newcommand{\tapeToCertificate}{\mathsf{tape}\textsf{-}\mathsf{to}\textsf{-}\mathsf{certificate}}
+  \newcommand{\Timestamp}{\mathit{Time}}
+
+  \newcommand{\graybox}[1]{$\colorbox{gray!20}{$#1\!$}$}
+
+  %\newcommand\Rarm{\R_{\ARM}}
+  \newcommand\Rarm{\mathsf{view}_{\ARM}}
+  \newcommand\transenv[1]{\textcolor{darkgray}{\textup{\textsf{\textbf{#1}}}}}
+
+  \newcommand\promMessage{\textit{msg}}
+  \newcommand\promMessageSet{\textit{Msg}}
+
+  \newcommand\Ftype{\textit{ftype}_{\ARM}}
+  \newcommand\FtypeProm{\textit{ftype}_{\Promise}}
+
+  \newcommand\RtypeProm{\textit{rtype}_{\Promise}}
+  \newcommand\WtypeProm{\textit{wtype}_{\Promise}}
+
+  \newcommand\V{\textit{V}}
+  \newcommand\R{\mathit{view}}
+  \newcommand\View{\mathit{View}}
+  \newcommand\Rsc{\R_{\mathrm{sc}}}
+  \newcommand\Rcur{\R_{\mathrm{cur}}}
+  \newcommand\Racq{\R_{\mathrm{acq}}}
+  \newcommand\Rrel{\R_{\mathrm{rel}}}
+
+  \newcommand\StmtARM{S}
+  \newcommand\StmtProm{S_{\Promise}}
+
+  \newcommand\Carm{{C}}
+  \newcommand\Cfarm{\Cf}
+  \newcommand\Cprom{{C}}
+  \newcommand\Cfprom{\Cf}
+  %% \newcommand\Carm{\textsf{C}_{\ARM}}
+  %% \newcommand\Cfarm{\Cf_{\ARM}}
+  %% \newcommand\Cprom{\textsf{C}_{\Promise}}
+  %% \newcommand\Cfprom{\Cf_{\Promise}}
+  
+  \newcommand\PromSet{\textit{promises}}
+  \newcommand\PromState{\textit{st}}
+
+  \newcommand\acqFence{\fence{\sf acq}}
+  \newcommand\relFence{\fence{\sf rel}}
+  \newcommand\scFence{\fence{\sf sc}}
+  \newcommand\fence[1]{\mathsf{fence} \; {#1}}
+
+  \newcommand\stRequest[3]{\angled{#1, #2, #3}}
+  \newcommand\stRequestWrite[4]{\angled{#1, #2, #3:#4}}
+  \newcommand\stRequestRead[3]{\angled{#1, #2, #3}}
+  \newcommand\stRequestFence[3]{\angled{#1, #2, #3}}
+
+  \newcommand\moTau{mo^{\tau}}
+  \newcommand\InMemory{im}
+
+  % \newcommand\opstau{op\_\loc\_\tau}
+  \newcommand\opstau{\textsf{com-writes-time}}
+  \newcommand\readsSatisfiedR{\textsf{sat-reads-view}}
+
+  \newcommand\hmap{\textit{H}}
+  \newcommand\tmap{\textit{H}_{\tau}}
+  \newcommand\rmap{\textit{H}_{\mathsf{view}}}
+  \newcommand\omap{\textit{H}_{\le}}
+
+  \newcommand\StateARM{\mathsf{State}_{\ARM}}
+  \newcommand\StateARMtau{\mathsf{State}_{\ARMt}}
+  \newcommand\StateProm{\mathsf{State}_{\Promise}}
+
+  \newcommand\armStep{\xrightarrow[\ARMt]{}}
+  \newcommand\armStepl{\xrightarrow[\ARMt]{}}
+  \newcommand\armStepgen[1]{\xrightarrow[\ARMt]{#1}}
+  \newcommand\armStepP{\xrightarrow[\ARM]{}}
+  \newcommand\armStepPgen[1]{\xrightarrow[\ARM]{#1}}
+
+  \newcommand\armStepPrSat{\armStepPgen{\transenv{Read satisfy} \; \tId \; \cpath \; \tId' \; \cpath' \; x \; \stval}}
+  \newcommand\armStepRSat{\armStepgen{\transenv{Read satisfy} \; \tId \; \cpath \; \tId' \; \cpath' \; x \; \stval}}
+  \newcommand\armStepPrSatFail{\armStepPgen{\transenv{Read satisfy (fail)} \; \tId \; \cpath \; \tId' \; \cpath' \; x \; \stval}}
+  \newcommand\armStepRSatFail{\armStepgen{\transenv{Read satisfy (fail)} \; \tId \; \cpath \; \tId' \; \cpath' \; x \; \stval}}
+  \newcommand\armStepPrInFlightSat{\armStepPgen{\transenv{Read satisfy from in-flight write} \; \tId \; \cpath \; \cpath' \; x \; \stval}}
+  \newcommand\armStepRInFlightSat{\armStepgen{\transenv{Read satisfy from in-flight write} \; \tId \; \cpath \; \cpath' \; x \; \stval}}
+
+  \newcommand\promStep{\xrightarrow[\Promise]{}}
+  \newcommand\promStepl{\xrightarrow[\Promise]{}}
+  \newcommand\promStepgen[1]{\xrightarrow[\Promise]{#1}}
+  \newcommand\promTStepgen[1]{\xrightarrow[\Promise \; \tId]{#1}}
+
+  %% \newcommand\semState[2]{|[#1|] ^{#2}}
+  \newcommand\semf[2]{|[#1|] ^{#2}}
+  \newcommand\semfcom[2]{|[#1|] ^{#2}_\mathsf{com}}
+
+  \newcommand\textIf{\text{\underline{if}} \;}
+  \newcommand\textElif{\text{\underline{elif}} \;}
+  \newcommand\textElse{\text{\underline{else}} \;}
+  \newcommand\textThen{\text{\underline{then}} \;}
+  \newcommand\textLet{\text{\underline{let}} \;}
+  \newcommand\textIn{\text{\underline{in}}}
+
+  %% \newcommand\nextPathCom[3]{nextPath_{com}(#1, #2, #3)}
+  \newcommand\nextPathCom[3]{\mathsf{next}\textsf{-}\mathsf{path}(#1, #2, #3)}
+  \newcommand\nextPathProm{\mathsf{next}\textsf{-}\mathsf{path}_{\Promise}}
+
+  \newcommand\comShift{\phantom{{}_\mathsf{com}}}
+
+  \newcommand\extendExpr{\expr\_extend}
+
+  %% \newcommand\reorderableRel{\leftrightarrow} 
+  %% \newcommand\notReorderableRel{\not \leftrightarrow} 
+  \newcommand\reorderableRel{\hookrightarrow} 
+  \newcommand\notReorderableRel{\not \reorderableRel} 
+  \newcommand\ReorderingFunction{is\_reorderable}
+
+  \newcommand\regst{\mathsf{regf}}
+  \newcommand\regstcom{\mathsf{regf}_\mathsf{com}}
+  
+  \newcommand\Mpop{\textit{M}_{\mathrm{POP}}}
+  \newcommand\Mprom{\textit{M}_{\mathrm{Promise}}}
+
+  \newcommand\Request{\textsf{req}}
+  \newcommand\RequestSet{\textit{ReqSet}}
+  \newcommand\RequestInfo{\mathsf{reqinfo}}
+  \newcommand\RequestInfoSet{\textit{ReqInfoSet}}
+  \newcommand\Evt{\textit{Evt}}
+  \newcommand\Ord{\textit{Ord}}
+  \newcommand\Prop{\textit{Prop}}
+
+  \newcommand\IssuingOrder{\textit{iord}}
+  \newcommand\IssuingOrderf{\textit{iordf}}
+
+  \newcommand\Issued[1]{\mathsf{requested} \; #1}
+  \newcommand\Satisfied{\mathsf{sat}}
+  \newcommand\SatisfiedInFlight{\mathsf{inflight}}
+  \newcommand\Committed{\mathsf{com}}
+  \newcommand\Plain{\mathsf{pln}}
+  \newcommand\None{\mathsf{none}}
+  \newcommand\Any{\mathsf{any}}
+
+  \newcommand\LD{\mathsf{LD}}
+  \newcommand\SY{\mathsf{SY}}
+  \newcommand\ST{\mathsf{ST}}
+
+  \newcommand\tId{\mathit{tid}}
+  \newcommand\Tid{\mathit{Tid}}
+
+  \newcommand\Tape{\textit{Tape}}
+  \newcommand\tape{\textit{tape}}
+  \newcommand\tapef{\textit{tapef}}
+  \newcommand\TapeCell{\textit{TapeCell}}
+  \newcommand\tapeCell{\textit{tapecell}}
+  \newcommand\Taken{\mathsf{taken}}
+  \newcommand\Ignored{\mathsf{ignored}}
+
+  \newcommand\cpath{\mathit{path}}
+  \newcommand\cpathSY{\cpath^{\SY}}
+  \newcommand\cpathLD{\cpath^{\LD}}
+  \newcommand\cpathLDSY{\cpath^{\LD\SY}}
+  \newcommand\Path{Path}
+  
+  \newcommand\tapeRead[1]{\textsf{R} \; #1}
+  \newcommand\tapeFence[2]{\textsf{F} \; #1 \; #2}
+  \newcommand\tapeWrite[1]{\textsf{W} \; #1}
+  \newcommand\tapeIfGoto[2]{\textsf{If} \; #1 \; #2}
+  \newcommand\tapeNop{\textsf{Nop}}
+  \newcommand\tapeAssign{\textsf{Assign}}
+
+  \newcommand\tapeSatisfied[2]{\Satisfied \; #1 \; #2}
+  \newcommand\satisfiedState{\textit{sat-state}}
+
+  \newcommand\tapePending[2]{\textsf{pending} \; #1 \; #2}
+  \newcommand\tapeWriteCommitted[3]{\Committed \; #1 \; #2 \; #3}
+
+  \newcommand\Fstate{\textit{st}_{\textup{\rm fence}}}
+  \newcommand\Rstate{\textit{st}_{\textup{\rm read}}}
+  \newcommand\Wstate{\textit{st}_{\textup{\rm write}}}
+  \newcommand\IfState{\textit{st}_{\textup{\rm ifgoto}}}
+
+  \newcommand\locvar{\iota}
+  \newcommand\loc{\ell}
+  \newcommand\Loc{Loc}
+  \newcommand\Reg{\mathit{Reg}}
+  \newcommand\reg{\mathit{reg}}
+  \newcommand\val{\mathit{val}}
+  \newcommand\stval{\mathit{val}}
+  \newcommand\Stval{\mathit{Val}}
+  \newcommand\expr{\mathit{expr}}
+  \newcommand\Expr{\mathit{Expr}}
+  \newcommand\z{\mathit{k}}
+
+  \newcommand\dmb{\textsf{dmb}}
+  \newcommand\nop{\textsf{nop}}
+  \newcommand\ifGoto{\textsf{ifGoto}}
+
+  \newcommand\ImmediateEdge{ImmediateEdge}
+   
+  \newcommand\armState[1]{\ARM_{state}(#1)}
+  \newcommand\TSfarm{TSf_{\ARM}}
+  \newcommand\angled[1]{\langle #1 \rangle}
+  %% \newcommand\TSfprom{TSf}
+  %% \newcommand\TSfprom{TSf_{\Promise}}
+  %% \newcommand\TS{TS_{\Promise}}
+  %% \newcommand\TSfprom{\textsf{tsf}}
+  %% \newcommand\TS{\textsf{ts}}
+  \newcommand\TSfprom{\textit{tsf}}
+  \newcommand\TS{\textit{ts}}
+
+  %% \newcommand\C{C}
+  \newcommand\Cf{\mathit{Prog}}%\textsf{Prog}
+
+  %% \newcommand\M{M}
+  \newcommand\e{e}
+  \newcommand\w{w}
+  \newcommand\dom[1]{\mathsf{dom}(#1)}
+  \newcommand\taumapping{\mathsf{map}_{\tau}}
+
+  \newcommand\JointState{\angled{\angled{\Evt, \Ord, \Prop}, \TSfarm, \M, \TSfprom, \Cf}}
+  \newcommand\Nop{Nop}
+  \newcommand\Write[1]{Write \; #1}
+  \newcommand\WritePending[1]{\Write(\Pending \; #1)}
+  \newcommand\Read[1]{Read \; #1}
+  \newcommand\ReadIssued[1]{Read \; (\Issued \; #1)}
+  \newcommand\ReadSatisfied[4]{Read \; (\Satisfied \; #1 \; #2 \; #3 \; #4)}
+  %% \newcommand\next[2]{next(#1, #2)}
+  \newcommand\nextPath[2]{\mathsf{next}\textsf{-}\mathsf{path}(#1, #2)}
+  \newcommand\lastIndex{\mathsf{last}\textsf{-}\mathsf{index}}
+  \newcommand\last[1]{last(#1)}
+  \newcommand\lastSY{\mathsf{last}\SY}
+  \newcommand\lastCF{\mathsf{lastCF}}
+  \newcommand\lastLD{\mathsf{last}\LD}
+  \newcommand\lastLDSY{\mathsf{last}\LD\SY}
+  \newcommand\Fence[2]{Fence \; #1 \; #2}
+  \newcommand\FenceSY[1]{\Fence{#1}{SY}}
+  \newcommand\FenceLD[1]{\Fence{#1}{LD}}
+  \newcommand\IfGoto[2]{IfGoto \; #1 \; #2}
+  \newcommand\IfGotoK[1]{\IfGoto{#1}{k}}
+  %% \newcommand\tick{✓}
+  \newcommand\Certificate{certificate}
+  \newcommand\CommandState{instrPlan}
+  \newcommand\State{State}
+  \newcommand\writeEvt[4]{\angled{#1:#2@#3,#4}}
+  %% \newcommand\writeEvt[4]{#1:#2@#3,#4}
+  \newcommand\simrel{\mathcal{I}}
+  \newcommand\simrelPre{\mathcal{I}_{\textup{\rm pre}}}
+  \newcommand\simrelBase{\mathcal{I}_{\textup{\rm base}}}
+  \newcommand\inv{\mathcal{I}}
+  \newcommand\s{\mathbf{s}}
+  \newcommand\sfst{\mathbf{s}_0}
+  \newcommand\ssnd{\mathbf{s}_1}
+  \newcommand\aT{\mathbf{a}}
+  \newcommand\afst{\mathbf{a}_0}
+  \newcommand\asnd{\mathbf{a}_1}
+  \newcommand\p{\mathbf{p}}
+  \newcommand\ptid{\mathbf{p}\textsf{-}\tId}
+%  \newcommand\ordPlusMO{S_{\Ord \cup mo}}
+  \newcommand\ordPlusMO{\textsf{S-Ord-mo}}
+
+  \newcommand\finalStateP{\mathsf{Final}^{\ARM}}
+  \newcommand\finalStateA{\mathsf{Final}^{\ARMt}}
+  \newcommand\finalStateProm{\mathsf{Final}^{\Promise}}
+
+  \newcommand\sinit{\mathbf{s}^{\rm init}}
+  \newcommand\ainit{\mathbf{a}^{\rm init}}
+  \newcommand\pinit{\mathbf{p}^{\rm init}}
+
+  \newcommand\invI[1]{\inv_{\textup{\rm #1}}}
+  \newcommand\invARM[1]{\inv^\ARM_{\textup{\rm #1}}}
+
+  \newcommand\invCf{\invI{prg}}
+  \newcommand\invTId{\invI{tid}}
+  \newcommand\invPrefix{\invI{prefix}}
+  \newcommand\invSPrefix{\invI{strong prefix}}
+  \newcommand\invMem{\invI{mem}}
+  \newcommand\invMemOne{\invI{mem1}}
+  \newcommand\invMemTwo{\invI{mem2}}
+  \newcommand\invView{\invI{view}}
+  \newcommand\invState{\invI{state}}
+  \newcommand\invCert{\invI{cert}} %\Certificate}}
+  \newcommand\invCertTid{\inv_{cert \; \tId}} %\Certificate}}
+  \newcommand\simrelTid{\inv_{exec \; \tId}} %\Certificate}}
+  \newcommand\invApartialOrderOrd{\inv^{ARM}_{\Ord \; \text{is a partial order}}}
+  \newcommand\invAuniqWrite{\invARM{unique write}}
+  \newcommand\invAtransClosedOrd{\invARM{\Ord = transitive\_closure(\Ord)}}
+  \newcommand\invAimmediateEdge{\invARM{Immediate edge}}
+  \newcommand\invAimmediatePath{\invARM{Immediate path}}
+  \newcommand\invAmaxPath{\invARM{max \; \cpath}}
+  \newcommand\invPromUptoARM{\invI{Promise is up to ARM}}
+  \newcommand\invPromUptoARMtId{\inv^{\tId}_{\textup{Promise is up to ARM}}}
+  \newcommand\invPromUptoARMnot{\invI{Promise isn't up to ARM}}
+
+
+  \newcommand\correctStateA{\inv^{\ARMt}_{\textup{\rm correct}}}
+  \newcommand\correctStateP{\invARM{correct}}
+  \newcommand\invATapeCf{\invARM{tape-Prg}}
+  \newcommand\invATapeCfState{\invARM{{tape-Prg-State}}}
+  \newcommand\invAReadWrite{\invARM{{Read-Write}}}
+  \newcommand\invAReadCommittedWrite{\invARM{{Read-Write-Committed}}}
+  \newcommand\invAview{\invARM{{View}}}
+  \newcommand\invAviewWrite{\invARM{{View-Write}}}
+  \newcommand\invAviewRead{\invARM{{View-Read}}}
+  \newcommand\invAWriteView{\invARM{{Write-View}}}
+  \newcommand\invAnextCommitted{\invARM{{Next-Committed}}}
+  \newcommand\invACf{\invARM{Prg}}
+  \newcommand\invAtId{\invARM{tid}}
+  \newcommand\invAldRead{\invARM{LD-Read}}
+  \newcommand\invAtypePreservation{\invARM{{tape-Type}}}
+  \newcommand\invAcommittedPreservation{\invARM{{Committed-Preserve}}}
+  \newcommand\invAstatePreservation{\invARM{{State-Preserve}}}
+  \newcommand\invAstateCom{\invARM{S-Scom}}
+  \newcommand\invAcomFences{\invARM{{Committed-Fences}}}
+  \newcommand\invAordMOacyclic{\invARM{{Ord-mo-acyclic}}}
+  \newcommand\invAordProp{\invARM{{Ord-Prop}}}
+  \newcommand\invApropOrd{\invARM{{Prop-Ord}}}
+  \newcommand\invAord{\invARM{{Ord-acyclic}}}
+  \newcommand\invAevtTape{\invARM{{Evt-tape}}}
+  \newcommand\invAtapeEvt{\invARM{{tape-Evt}}}
+  \newcommand\invAtapeOrd{\invARM{{tape-Ord}}}
+  \newcommand\invAReadWriteOne{\invARM{{Read-Write-1}}}
+  \newcommand\invAReadWriteTwo{\invARM{{Read-Write-2}}}
+
+  \newcommand\invPMP{\inv^{\Promise}_{\textsf{M-P}}}
+  \newcommand\invPmessageView{\inv^{\Promise}_{\textup{\rm Message-View}}}
+
+  \newcommand\armStepFetch{\overset{fetch \; \tId \; \cpath}{\armStepl}}
+  \newcommand\armStepFetchPrime{\overset{fetch \; \tId' \; \cpath'}{\armStepl}}
+  \newcommand\armStepProp{\overset{e \rightsquigarrow \tId}{\armStepl}}
+  \newcommand\armStepPropPrime{\overset{e' \rightsquigarrow \tId'}{\armStepl}}
+  \newcommand\armStepWritePending{\overset{\dashrightarrow \stRequestWrite{\tId}{ \cpath}{ x}{\stval}}{\armStepl}}
+  \newcommand\armStepWritePendingPrime{\overset{\dashrightarrow \stRequestWrite{\tId'}{ \cpath'}{ y}{\stval'}}{\armStepl}}
+
+  \newcommand\armStepReadRequest{\overset{\dashrightarrow \stRequestRead{\tId}{ \cpath}{ x}}{\armStepl}}
+  \newcommand\armStepReadRequestPrime{\overset{\dashrightarrow \stRequestRead{\tId'}{ \cpath'}{ y}}{\armStepl}}
+  \newcommand\armStepCondBranch{\overset{\dashrightarrow \tId, \cpath, \text{choose branch}}{\armStepl}}
+  \newcommand\armStepCondBranchPrime{\overset{\dashrightarrow \tId', \cpath', \text{choose branch}}{\armStepl}}
+  \newcommand\armStepFenceCommit{\overset{\dashrightarrow \stRequestFence{\tId}{ \cpath}{ \Ftype}}{\armStepl}}
+  \newcommand\armStepFenceCommitPrime{\overset{\dashrightarrow \stRequestFence{\tId'}{ \cpath'}{ \Ftype'}}{\armStepl}}
+  \newcommand\armStepReadSatisfy{\overset{\dashrightarrow \stRequestRead{\tId}{ \cpath}{ x}, \stRequestWrite{\tId'}{ \cpath'}{ x}{\stval}}{\armStepl}}
+  \newcommand\armStepReadSatisfyPrime{\overset{\dashrightarrow \stRequestRead{\tId'}{ \cpath'}{ y}, \stRequestWrite{\tId''}{ \cpath''}{ y}{\stval'}}{\armStepl}}
+  \newcommand\armStepReadSatisfyFail{\overset{\not \dashrightarrow \stRequestRead{\tId}{ \cpath}{ x}, \stRequestWrite{\tId'}{ \cpath'}{ x}{\stval}}{\armStepl}}
+  \newcommand\armStepReadSatisfyFailPrime{\overset{\not \dashrightarrow \stRequestRead{\tId'}{ \cpath'}{ y}, \stRequestWrite{\tId''}{ \cpath''}{ y}{\stval'}}{\armStepl}}
+  \newcommand\armStepReadSatisfyInF{\overset{\dashrightarrow \stRequestRead{\tId}{ \cpath}{ x}, \stRequestWrite{\tId}{ \cpath'}{ x}{\stval}}{\armStepl}}
+  \newcommand\armStepReadSatisfyInFPrime{\overset{\dashrightarrow \stRequestRead{\tId'}{ \cpath'}{ y}, \stRequestWrite{\tId'}{ \cpath''}{ y}{\stval'}}{\armStepl}}
+  \newcommand\armStepReadCommit{\overset{\dashrightarrow \tId, \cpath, \text{read commit}}{\armStepl}}
+  \newcommand\armStepReadCommitPrime{\overset{\dashrightarrow \tId', \cpath', \text{read commit}}{\armStepl}}
+
+  \newcommand\armStepFetchP{\overset{\text{fetch} \; \tId \; \cpath}{\armStepP}}
+  \newcommand\armStepFetchPrimeP{\overset{\text{fetch} \; \tId' \; \cpath'}{\armStepP}}
+  \newcommand\armStepPropP{\overset{e \rightsquigarrow \tId}{\armStepP}}
+  \newcommand\armStepPropPrimeP{\overset{e' \rightsquigarrow \tId'}{\armStepP}}
+  \newcommand\armStepWritePendingP{\overset{\dashrightarrow \stRequestWrite{\tId}{ \cpath}{ x}{\stval}}{\armStepP}}
+  \newcommand\armStepWritePendingPrimeP{\overset{\dashrightarrow \stRequestWrite{\tId'}{ \cpath'}{ y}{\stval'}}{\armStepP}}
+  \newcommand\armStepReadRequestP{\overset{\dashrightarrow \stRequestRead{\tId}{ \cpath}{ x}}{\armStepP}}
+  \newcommand\armStepReadRequestPrimeP{\overset{\dashrightarrow \stRequestRead{\tId'}{ \cpath'}{ y}}{\armStepP}}
+  \newcommand\armStepCondBranchP{\overset{\dashrightarrow \tId, \cpath, \text{choose branch}}{\armStepP}}
+  \newcommand\armStepCondBranchPrimeP{\overset{\dashrightarrow \tId', \cpath', \text{choose branch}}{\armStepP}}
+  \newcommand\armStepFenceCommitP{\overset{\dashrightarrow \stRequestFence{\tId}{ \cpath}{ \Ftype}}{\armStepP}}
+  \newcommand\armStepFenceCommitPrimeP{\overset{\dashrightarrow \stRequestFence{\tId'}{ \cpath'}{ \Ftype'}}{\armStepP}}
+  \newcommand\armStepReadSatisfyP{\overset{\dashrightarrow \stRequestRead{\tId}{ \cpath}{ x}, \stRequestWrite{\tId'}{ \cpath'}{ x}{\stval}}{\armStepP}}
+  \newcommand\armStepReadSatisfyPrimeP{\overset{\dashrightarrow \stRequestRead{\tId'}{ \cpath'}{ y}, \stRequestWrite{\tId''}{ \cpath''}{ y}{\stval'}}{\armStepP}}
+  \newcommand\armStepReadSatisfyFailP{\overset{\not \dashrightarrow \stRequestRead{\tId}{ \cpath}{ x}, \stRequestWrite{\tId'}{ \cpath'}{ x}{\stval}}{\armStepP}}
+  \newcommand\armStepReadSatisfyFailPrimeP{\overset{\not \dashrightarrow \stRequestRead{\tId'}{ \cpath'}{ y}, \stRequestWrite{\tId''}{ \cpath''}{ y}{\stval'}}{\armStepP}}
+  \newcommand\armStepReadSatisfyInFP{\overset{\dashrightarrow \stRequestRead{\tId}{ \cpath}{ x}, \stRequestWrite{\tId}{ \cpath'}{ x}{\stval}}{\armStepP}}
+  \newcommand\armStepReadSatisfyInFPrimeP{\overset{\dashrightarrow \stRequestRead{\tId'}{ \cpath'}{ y}, \stRequestWrite{\tId'}{ \cpath''}{ y}{\stval'}}{\armStepP}}
+  \newcommand\armStepReadCommitP{\overset{\dashrightarrow \tId, \cpath, \text{read commit}}{\armStepP}}
+  \newcommand\armStepReadCommitPrimeP{\overset{\dashrightarrow \tId', \cpath', \text{read commit}}{\armStepP}}
+
