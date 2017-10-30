@@ -203,6 +203,7 @@ at #5 {#7};
 {
   \begin{frame}<beamer>
     \large
+    \LARGE
     %% \frametitle{Outline for section \thesection}
     \tableofcontents[currentsection]
   \end{frame}
@@ -329,9 +330,7 @@ at #5 {#7};
 %% \item \only<-7>{Производительный}\only<8>{{\bf ?Производительный?}}\only<9->{{\bf Оптимизирующий}} Процессор
 %% }
 
-\section{Контекст}
-
-\subsection{Слабые поведения}
+\section{Контекст и мотивация}
 
 \fr{}{
 \LARGE
@@ -362,9 +361,15 @@ $$\begin{array}{c}
 \dimalert<9>{А если переупорядочить?}
 
 \only<12->{\cntrd{\textcolor{darkGreen}{a = b = 0}}}
-\only<14->{\cntrd{\bf \alert{Такое поведение наблюдается в реальности (например, GCC + x86)!}}}
+\only<14->{\cntrd{\bf \alert{Такое поведение наблюдается для GCC + x86!}}}
 
     \tikz[remember picture, overlay]{ \draw<10,13->[<->,ultra thick] (reorder2) to[out=178,in=182] (reorder1); }
+}
+
+\fr{}{
+  \huge
+  Подобные поведения называются {\bf слабыми}\pause,
+  а семантики --- {\bf слабыми моделями памяти}
 }
 
 \fri{План}{
@@ -374,16 +379,52 @@ $$\begin{array}{c}
 
 \section{Постановка задачи}
 
-\section{Операционный вариант модели памяти C/C++11}
-\fr{}{Сначала мы расскажем о той части, которая совпадает в обоих моделях. Потом введем обещания.}
+\fr{Результаты исследования}{
+}
 
-\section{Корректность компиляции}
+\section{Результаты}
 
-\section{Результатых работы}
+\fr{Операционный вариант модели памяти C/C++11}
+{Сначала мы расскажем о той части, которая совпадает в обоих моделях. Потом введем обещания.}
 
-%% \phrase{Подобные поведения многопоточных программ называются {\bf слабыми}}
-%% \phrase{А соответствующие семантики --- {\bf слабыми моделями памяти}\pause.
-%%         Этот доклад про такие модели}
+\fr{Корректность компиляции}{}
+
+\fr{\LARGE Публикации}{
+  \footnotesize
+
+  \begin{block}{ВАК}
+    \begin{itemize}
+      \item О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель ARMv8.3,
+        НТВ СПбГПУ \#4 2017 \\
+        (А. Подкопаев, О. Лахав, В. Вафеядис)
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{Scopus, Web of Science}
+    \begin{itemize}
+      \item Promising compilation to ARMv8 POP, ECOOP 2017 \\
+         (A. Podkopaev, O. Lahav, V. Vafeiadis)
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{arXiv}
+    \begin{itemize}
+      \item Operational Aspects of C/C++ Concurrrency, 2016 \\
+         (A. Podkopaev, I. Sergey, A. Nanevski)
+    \end{itemize}
+  \end{block}
+}
+
+\fri{\huge Планы на будущее}{
+  \LARGE
+  \item Компиляция из всей обещающей машины в ARMv8.3 и Power в Coq
+  \item Логика для программ в обещающей машине
+}
+
+\fr{\Huge Результаты}{
+  \pause \cntrd{\huge \textcolor{red}{Спасибо!}}
+}
+
 
 %% \fr{}{
 
