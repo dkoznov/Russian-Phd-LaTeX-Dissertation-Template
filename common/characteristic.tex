@@ -296,9 +296,13 @@ POPL 2016 Student Research Competition (POPL 2016 SRC, 21 января 2016, С�
 
 {\contribution} Автор принимал активное участие \ldots
 
-%\publications\ Основные результаты по теме диссертации изложены в ХХ печатных изданиях~\cite{Sokolov,Gaidaenko,Lermontov,Management},
-%Х из которых изданы в журналах, рекомендованных ВАК~\cite{Sokolov,Gaidaenko}, 
-%ХХ --- в тезисах докладов~\cite{Lermontov,Management}.
+%% \publications\ Основные результаты по теме диссертации изложены в ХХ печатных изданиях~\cite{Sokolov,Gaidaenko,Lermontov,Management},
+%% Х из которых изданы в журналах, рекомендованных ВАК~\cite{Sokolov,Gaidaenko}, 
+%% ХХ --- в тезисах докладов~\cite{Lermontov,Management}.
+
+\nocite{Podkopaev-al:ECOOP17}
+\nocite{Podkopaev-al:CoRR16}
+\nocite{Podkopaev-al:NTV17}
 
 \ifnumequal{\value{bibliosel}}{0}{% Встроенная реализация с загрузкой файла через движок bibtex8
     \publications\ Основные результаты по теме диссертации изложены в XX печатных изданиях, 
@@ -308,14 +312,16 @@ POPL 2016 Student Research Competition (POPL 2016 SRC, 21 января 2016, С�
 %Сделана отдельная секция, чтобы не отображались в списке цитированных материалов
     \begin{refsection}[vak,papers,conf]% Подсчет и нумерация авторских работ. Засчитываются только те, которые были прописаны внутри \nocite{}.
         %Чтобы сменить порядок разделов в сгрупированном списке литературы необходимо перетасовать следующие три строчки, а также команды в разделе \newcommand*{\insertbiblioauthorgrouped} в файле biblio/biblatex.tex
-        \printbibliography[heading=countauthorvak, env=countauthorvak, keyword=biblioauthorvak, section=1]%
+        \printbibliography[title={Тест},heading=countauthorvak, env=countauthorvak, keyword=biblioauthorvak, section=1]%
         \printbibliography[heading=countauthorconf, env=countauthorconf, keyword=biblioauthorconf, section=1]%
         \printbibliography[heading=countauthornotvak, env=countauthornotvak, keyword=biblioauthornotvak, section=1]%
         \printbibliography[heading=countauthor, env=countauthor, keyword=biblioauthor, section=1]%
         \nocite{%Порядок перечисления в этом блоке определяет порядок вывода в списке публикаций автора
-                vakbib1,vakbib2,%
-                confbib1,confbib2,%
-                bib1,bib2,%
+                Podkopaev-al:NTV17,
+                %% vakbib1,vakbib2,%
+                %% confbib1,confbib2,%
+                Podkopaev-al:ECOOP17, Podkopaev-al:CoRR16,
+                %% bib1,bib2,%
         }%
         \publications\ Основные результаты по теме диссертации изложены в \arabic{citeauthor} печатных изданиях, 
         \arabic{citeauthorvak} из которых изданы в журналах, рекомендованных ВАК, 
@@ -323,16 +329,14 @@ POPL 2016 Student Research Competition (POPL 2016 SRC, 21 января 2016, С�
     \end{refsection}
     \begin{refsection}[vak,papers,conf]%Блок, позволяющий отобрать из всех работ автора наиболее значимые, и только их вывести в автореферате, но считать в блоке выше общее число работ
         \printbibliography[heading=countauthorvak, env=countauthorvak, keyword=biblioauthorvak, section=2]%
+        \nocite{Podkopaev-al:NTV17}%vak
         \printbibliography[heading=countauthornotvak, env=countauthornotvak, keyword=biblioauthornotvak, section=2]%
         \printbibliography[heading=countauthorconf, env=countauthorconf, keyword=biblioauthorconf, section=2]%
         \printbibliography[heading=countauthor, env=countauthor, keyword=biblioauthor, section=2]%
-        \nocite{vakbib2}%vak
-        \nocite{bib1}%notvak
-        \nocite{confbib1}%conf
+        \nocite{Podkopaev-al:CoRR16}%notvak
+        \nocite{Podkopaev-al:ECOOP17}%conf
     \end{refsection}
 }
-При использовании пакета \verb!biblatex! для автоматического подсчёта
-количества публикаций автора по теме диссертации, необходимо
-их здесь перечислить с использованием команды \verb!\nocite!.
-    
-
+%% При использовании пакета \verb!biblatex! для автоматического подсчёта
+%% количества публикаций автора по теме диссертации, необходимо
+%% их здесь перечислить с использованием команды \verb!\nocite!.
