@@ -1,3 +1,9 @@
+\newcommand{\ifext}[2]{\ifdefined\extflag{#1}\else{#2}\fi}
+\newcommand{\tick}{\checkmark}%
+\newcommand{\tickP}{\checkmark}%
+\newcommand{\tickPP}{\checkmark}%
+\newcommand{\xmark}{\text{\ding{55}}}
+\newcommand{\fail}{\xmark}%
 
 \section*{Общая характеристика работы}
 
@@ -26,41 +32,213 @@
 исследований, проводимых в рамках данной диссертационной работы,
 приводится обзор научной литературы по изучаемой проблеме,
 формулируется цель, ставятся задачи работы, излагается научная новизна
-и практическая значимость представляемой работы. В последующих главах
-сначала описывается общий принцип, позволяющий ... , а потом идёт
-апробация на частных примерах: ...  и ... .
+и практическая значимость представляемой работы.
 
+\underline{\textbf{Первая глава}} посвящена обзору области исследования.
+Рассматриваются требования, предъявляемые к реалистичным моделями памяти
+языков программирования, через призму наблюдаемых поведений многопоточных программ,
+применяемых компиляторами оптимизаций, а также моделей памяти процессорных архитектур.
+Описывается модель памяти C/C++11. Рассматриваются проблемы модели C/C++11, в том числе
+проблема т.н. значений из воздуха. Приводится описание существующих решений к заданию
+слабой модели памяти без значений из воздуха, в частности, ``обещающей'' модели памяти.
+На базе обзора предметной области были вынесены следующие выводы.
+\begin{itemize}
+  \item Модель памяти C/C++11 не удовлетворяет всем требованиям, предъявляемых к ней.
+  \item Проблемы модели памяти C/C++11 требуют представления модели в операционном виде.
+  \item ``Обещающая'' модель памяти является перспективной альтернативой существующей модели памяти C/C++.
+  \item Существует необходимость показать корректность эффективной компиляции из ``обещающей'' модели
+    памяти в модель памяти архитектуры ARM.
+\end{itemize}
 
-\underline{\textbf{Первая глава}} посвящена ...
+\underline{\textbf{Вторая глава}} посвящена операционному варианту модели памяти для C/С++,
+предложенному диссертантом. Модель представлена в виде операционной семантики малого шага с помощью редукционных
+контекстов.
 
- картинку можно добавить так:
-\begin{figure}[ht] 
-  \center
-  \includegraphics [scale=0.27] {latex}
-  \caption{Подпись к картинке.} 
-  \label{img:latex}
+\todo{
+План. Особенности семантики:
+\begin{itemize}
+  \item Метки времени.
+  \item Фронты.
+  \item Буферы операций, переупорядочивание инструкций.
+\end{itemize}
+}
+
+Апробация предложенной семантики была выполнена на наборе программ-тестов (litmus tests) из тематической литературы
+(см. рис. \ref{fig:litmusTbl}). \todo{TODO: Добавить описание таблички.}
+
+{
+%% \setlength{\belowcaptionskip}{-20pt} 
+\begin{figure}[h!]
+\centering
+{\scriptsize
+%% \begin{tabular}{| l ||@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}||@{~}c@{~}|}
+\begin{tabular}{| l ||@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}||@{~}c@{~}|}
+  \hline
+  \textbf{Название теста} & \textsf{VF} & \textsf{WF} & \textsf{SCF}
+  & \textsf{NAF} & \textsf{PO} & \textsf{ARR} % & \textsf{VS}
+  & \textsf{CR} & \textsf{JN} & \textbf{C11} \\
+%
+% \textbf{Test name} & History & Viewfronts & Write-fronts & SC-front
+%           & NA-front & Postponed operations & Acquire Read Restrictions (& Value Stealing) & Consume & Joining threads w/ non-empty operation buffers & \textbf{Full Support} \\
+
+\hline\hline
+\multicolumn{10}{|c|}{Store Buffering (\textsf{SB})\ifext{, \S\ref{app:sb}}{}} \\
+\hline
+\textsf{rel+acq}   & \tick & &       & & & & & & \tick\\ 
+\textsf{sc}        & \tick & & \tick & & & & & & \tick\\ 
+\textsf{sc+rel}    & \tick & & \tick & & & & & & \tick\\ 
+\textsf{sc+acq}    & \tick & & \tick & & & & & & \tick\\ 
+
+\hline
+\multicolumn{10}{|c|}{Load Buffering (\textsf{LB})\ifext{, \S\ref{app:lb}}{}} \\
+\hline
+\textsf{rlx}         & \tick & & & & \tick & & & & \tick\\ 
+\textsf{rel+rlx}     & \tick & & & & \tick & & & & \tick\\ 
+\textsf{acq+rlx}     & \tick & & & & \tick & & & & \fail\\ 
+\textsf{rel+acq+rlx} & \tick & & & & \tick & \tick & & & \tick\\ 
+\textsf{rlx+use}     & \tick & & & & \tick & & & & \tick\\ 
+\textsf{rlx+let}     & \tick & & & & \tick & & & & \tick\\ 
+\textsf{rlx+join}    & \tick & & & & \tick & & & \tick & \tickP\\ 
+\textsf{rel+rlx+join} & \tick & & & & \tick & & & \tick & \tickP\\ 
+\textsf{acq+rlx+join} & \tick & & & & \tick & & & \tick & \fail\\ 
+
+\hline
+\multicolumn{10}{|c|}{Message passing (\textsf{MP})\ifext{, \S\ref{app:mp}}{}} \\
+\hline
+\textsf{rlx+na}            & \tick &       & & \tick & & &       & & \tick\\ 
+\textsf{rel+rlx+na}        & \tick &       & & \tick & & &       & & \tick\\ 
+\textsf{rlx+acq+na}        & \tick &       & & \tick & & &       & & \tick\\ 
+\textsf{rel+acq+na}        & \tick &       & & \tick & & \tick & & & \tick\\ 
+\textsf{rel+acq+na+rlx(\_2)} & \tick & \tick & & \tick & & \tick & & & \tick\\ 
+\textsf{con+na(\_2)}       & \tick &       & & \tick & & & \tick & & \tick\\ 
+\textsf{cas+rel+acq+na}    & \tick &       & & \tick & & \tick & & & \tick\\ 
+\textsf{cas+rel+rlx+na}    & \tick &       & & \tick & & &     & & \tick\\ 
+
+\hline
+\multicolumn{10}{|c|}{Coherence of Read-Read (\textsf{CoRR})\ifext{, \S\ref{app:corr}}{}} \\
+\hline
+\textsf{rlx}      & \tick & &       & & &  & & & \tick\\ 
+\textsf{rel+acq}  & \tick & &       & & &  & & & \tick\\ 
+
+\hline
+\multicolumn{10}{|c|}{Independent Reads of Independent Writes (\textsf{IRIW})\ifext{, \S\ref{app:iriw}}{}} \\
+\hline
+\textsf{rlx}      & \tick & &       & & &  & & & \tick\\ 
+\textsf{rel+acq}  & \tick & &       & & &  & & & \tick\\ 
+\textsf{sc}       & \tick & & \tick & & &  & & & \tick\\ 
+
+\hline
+\multicolumn{10}{|c|}{Write-to-Read Causality (\textsf{WRC})\ifext{, \S\ref{app:wrc}}{}} \\
+\hline
+\textsf{rlx}      & \tick & &       & & & &  & & \tick\\ 
+\textsf{rel+acq}  & \tick & &       & & & &  & & \tick\\ 
+\textsf{cas+rel}  & \tick & &       & & & \tick & & & \tick\\ 
+\textsf{cas+rlx}  & \tick & &       & & & &  & & \tick\\ 
+
+\hline
+\multicolumn{10}{|c|}{Out-of-Thin-Air (\textsf{OTA})\ifext{, \S\ref{app:ota}}{}} \\
+\hline
+\textsf{lb}       & \tick & &       & & \tick & & & & \fail\\ 
+\textsf{if}       & \tick & &       & & \tick & & & & \fail\\ 
+
+\hline
+\multicolumn{10}{|c|}{Write Reorder (\textsf{WR})\ifext{, \S\ref{app:wr}}{}} \\
+\hline
+\textsf{rlx}      & \tick & &       & & \tick & & & & \tick\\ 
+\textsf{rlx+rel}  & \tick & &       & & \tick & \tick & & & \tick\\ 
+\textsf{rel}      & \tick & &       & & \tick & \tick & & & \tick\\ 
+
+%% \hline
+%% \multicolumn{11}{|c|}{Value Stealing (\textsf{VS})\ifext{, \S\ref{app:ss}}{}} \\
+%% \hline
+%% \textsf{rlx}      & \tick & &       & & \tick & \tick & \tick & & & \tick\\ 
+
+\hline
+\multicolumn{10}{|c|}{Speculative Execution (\textsf{SE})\ifext{, \S\ref{app:se}}{}} \\
+\hline
+\textsf{simple}      & \tick & &       & & \tick & & & & \tick\\ 
+\textsf{prop}        & \tick & &       & & \tick & & & & \tick\\ 
+\textsf{nested}      & \tick & &       & & \tick & & & & \tick\\ 
+
+  \hline
+  \multicolumn{10}{|c|}{Locks\ifext{, \S\ref{app:locks}}{}} \\
+  \hline
+  Dekker & \tick & & & \tick & & & & & \tick\\ 
+  Cohen~\cite{Turon-al:OOPSLA14}  & \tick & & & \tick & & & & & \tick\\ 
+
+%% LB & $\checkmark$ & & \\
+%% \multicolumn{4}{l}{ A snippet code here
+%% }\\
+%% SB & $\checkmark$ & & \\
+
+\hline
+
+\end{tabular}
+}
+\caption{Litmus tests
+  \ifext{(Appendix~\ref{sec:litmusTests})}{} and corresponding
+  semantic aspects of our framework:
+  {viewfronts}~(\textsf{VF},~\S\ref{sec:hist}),
+  {write-fronts}~(\textsf{WF},~\S\ref{sec:wrf}),
+  SC-fronts~(\textsf{SCF},~\S\ref{sec:sc}), {non-atomic
+    fronts}~(\textsf{NAF},~\S\ref{sec:na}), {postponed
+    operations}~(\textsf{PO},~\S\ref{sec:postponed-sem}),
+  {acquire read restrictions}),
+    %($\stGamma$)}~(\textsf{ARR},~\S\ref{sec:postponed-sem}),
+  %% {value stealing}~(\textsf{VS},~\S\ref{sec:postponed-sem}),
+  %% {if speculations}~(\textsf{IS}),
+  {consume-reads}~(\textsf{CR}), {joining threads with non-empty
+    operation buffers}~(\textsf{JN},~\S\ref{sec:join}).  The column
+  \textbf{C11} indicates whether the behavior is coherent with the C11
+  standard.  }
+\label{fig:litmusTbl}
 \end{figure}
+}
 
-Формулы в строку без номера добавляются так:
-\[ 
-  \lambda_{T_s} = K_x\frac{d{x}}{d{T_s}}, \qquad
-  \lambda_{q_s} = K_x\frac{d{x}}{d{q_s}},
-\]
 
-\underline{\textbf{Вторая глава}} посвящена исследованию 
+В \underline{\textbf{третьей главе}} приводится описание интерпретатора операционного варианта модели памяти для C/C++.
+Интерпретатор реализован на языке Racket, который является диалектом Lisp, с помощью библиотеки описания операционных
+семантик PLT/Redex.
 
-\underline{\textbf{Третья глава}} посвящена исследованию 
+В \underline{\textbf{четвертой главе}} приводится описание ``обещающей'' модели памяти.
 
-В \underline{\textbf{четвертой главе}} приведено описание 
+В \underline{\textbf{пятой главе}} приводится описание операционной модели ARMv8 POP и для неё
+приводится доказательство корректности компиляции из ``обещающей'' модели памяти.
+Доказательство основано на специальной версии симуляции --- \emph{запаздывающей} симуляции.
+
+В \underline{\textbf{шестой главе}} обсуждается аксиоматическая модель памяти ARMv8.3.
+Приводятся рассуждения о том, почему
+метод доказательства корректности компиляции из ``обещающей'' модели памяти, использованный её авторами для случая
+аксиоматических моделей архитектур x86 и Power, не подходит для модели ARMv8.3.
+Обсуждается структура доказательства корректности компиляции. Доказательство основано на симуляции ``обещающей'' моделью
+памяти операционной семантики обхода исполнения программ в модели ARMv8.3.
+
+В \underline{\textbf{седьмой главе}} приводится семантика обхода исполнений программ в модели ARMv8.3. Доказывается
+полнота данного обхода.
 
 В \underline{\textbf{заключении}} приведены основные результаты работы, которые заключаются в следующем:
 \input{common/concl}
 
+%%  картинку можно добавить так:
+%% \begin{figure}[ht] 
+%%   \center
+%%   \includegraphics [scale=0.27] {latex}
+%%   \caption{Подпись к картинке.} 
+%%   \label{img:latex}
+%% \end{figure}
+
+%% Формулы в строку без номера добавляются так:
+%% \[ 
+%%   \lambda_{T_s} = K_x\frac{d{x}}{d{T_s}}, \qquad
+%%   \lambda_{q_s} = K_x\frac{d{x}}{d{q_s}},
+%% \]
+
+
 
 %\newpage
-При использовании пакета \verb!biblatex! список публикаций автора по теме
-диссертации формируется в разделе <<\publications>>\ файла
-\verb!../common/characteristic.tex!  при помощи команды \verb!\nocite! 
+%% При использовании пакета \verb!biblatex! список публикаций автора по теме
+%% диссертации формируется в разделе <<\publications>>\ файла
+%% \verb!../common/characteristic.tex!  при помощи команды \verb!\nocite! 
 
 \ifdefmacro{\microtypesetup}{\microtypesetup{protrusion=false}}{} % не рекомендуется применять пакет микротипографики к автоматически генерируемому списку литературы
 \ifnumequal{\value{bibliosel}}{0}{% Встроенная реализация с загрузкой файла через движок bibtex8
