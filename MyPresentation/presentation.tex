@@ -27,7 +27,7 @@
 \usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{positioning}
-\usetikzlibrary{fadings,decorations.pathmorphing}
+\usetikzlibrary{fadings,decorations.pathmorphing,decorations.pathreplacing}
 \usetikzlibrary{shapes.multipart,matrix,calc}
 \usetikzlibrary{arrows}
 \usetikzlibrary{shapes.callouts} 
@@ -38,6 +38,8 @@
 \usepackage{mathtools}
 \usepackage[absolute,overlay]{textpos}
 \usepackage{xspace}
+\usepackage[nomessages]{fp}% http://ctan.org/pkg/fp
+\usepackage{wasysym}
 
 \usepackage[labelformat=empty]{caption}
 \usepackage{fontspec}
@@ -65,6 +67,8 @@ at #5 {#7};
 }
 
 \newcommand{\tikzmark}[1]{\tikz[overlay,remember picture,baseline=-0.5ex] \node (#1) {};}
+\newcommand{\prevFr}[2]{\FPeval{#1}{clip(#2-1)}}
+\newcommand{\nextFr}[2]{\FPeval{#1}{clip(#2+1)}}
 \newcommand{\toGray}[3]{\only<-#1>{#3} \only<#2->{\textcolor{gray!30}{#3}}}
 
 \definecolor{myGray}{RGB}{50,50,50}
@@ -187,6 +191,109 @@ at #5 {#7};
 
 \makeatother
 
+% SET OVERLAY NUMBER ORDER
+\usepackage{etoolbox}
+\usepackage{xstring}
+\newcounter{mycounter}
+
+% #1 is of the form <name>[=-|n], e.g. foo=- or foo=10 or foo
+% Stores in #2 the overlay specification for <name> s.t. it can be appended to the content of <name>
+\newcommand*{\getNewOverlayContent}[2]{%
+    \getItemSpec{#1}{itemSpec}%
+    \IfStrEq{\itemSpec}{-}{%
+        \csedef{#2}{\arabic{beamerpauses}-}%
+    }{%
+        \IfStrEq{\itemSpec}{}{%
+            \csedef{#2}{\arabic{beamerpauses}}%
+        }{%
+            \IfInteger{\itemSpec}{%
+%               \mycounter=\
+                \setcounter{mycounter}{\arabic{beamerpauses}}%
+                \addtocounter{mycounter}{\itemSpec}%
+                \addtocounter{mycounter}{-1}%
+                \csedef{#2}{\arabic{beamerpauses}-\arabic{mycounter}}%
+            }{%
+                \PackageError{setorder}{Argument has illegal format}{Argument was #1}%
+            }%
+        }%
+    }%
+%   input: #1, itemspec:\itemSpec, beamervalue: \arabic{beamerpauses}, content: \csuse{#2} \\
+}
+% #1 is of the form 'foo=1' or 'foo=-' or 'foo'. 
+% #2 Is the name of the macro which should hold the result
+% This macro stores the part infront '=' (the name) in #2.
+\newcommand*{\getItemName}[2]{% 
+    \IfSubStr{#1}{=}{%
+        \StrBefore{#1}{=}[\tmp]%
+        \csdef{#2}{\tmp}%
+    }{%
+        \csdef{#2}{#1}% 
+    }%
+}
+% #1 is of the form 'foo=1' or 'foo=-' or 'foo'. 
+% #2 Is the name of the macro which should hold the result
+% This macro stores the part behind '=' (the overlay spec) in #2. The stored part is empty iff there is no '=' in #1
+\newcommand*{\getItemSpec}[2]{%
+    \StrBehind{#1}{=}[\tmp]%
+    \csdef{#2}{\tmp}%
+}
+% #2 is the name where content should be appended. 
+% It has been ensured previously that #2 is a defined macro
+% #1 is the content to append
+% Depending on whether #2 is empty or not a (,) is added 
+% before appending #1
+\newcommand*{\appendToOverlaySpecification}[2]{%
+    \IfStrEq{\csexpandonce{#2}}{}{%
+        % #1 i.e. <name> is empty
+        \cseappto{#2}{\csname#1\endcsname}%
+    }{%
+        \cseappto{#2}{,\csname#1\endcsname}%
+    }%
+}
+
+\newcommand*{\setorderItem}[1]{%
+    \getNewOverlayContent{#1}{overlaycontent}%
+    \getItemName{#1}{cmdname}%
+    \appendToOverlaySpecification{overlaycontent}{\cmdname}%
+}
+
+\newcommand*{\setorderList}[1]{%
+    \forcsvlist{\setorderItem}{#1}%
+    \stepcounter{beamerpauses}%
+}
+\newcommand*{\setorder}[1]{%    
+    \clearNamesListofLists{#1}%
+    \forcsvlist{\setorderList}{#1}%
+    %% \createBef{#1}%
+}
+
+%% \newcommand*{\createBefItem}[1]{%
+%%     \getItemName{#1}{cmdname}%
+%%     \getItemName{bef#1}{cmdnameBef}%
+%%     \csdef{\cmdnameBef}{}% 
+%%     \prevFr{\cmdnameBef}{\cmdname}%
+%% }
+
+%% \newcommand*{\createBefList}[1]{%
+%%     \forcsvlist{\createBefItem}{#1}%
+%% }
+
+%% \newcommand*{\createBef}[1]{%
+%%     \forcsvlist{\createBefList}{#1}%
+%% }
+
+% takes a list of lists of the form: {foo=1, bla},{gar=-} and then defines empty macros for each name
+\newcommand*{\clearNamesListofLists}[1]{%
+    \forcsvlist{    \clearNamesList}{#1}%
+}
+\newcommand*{\clearNamesList}[1]{%
+    \forcsvlist{    \clearName}{#1}%
+}
+\newcommand*{\clearName}[1]{%
+    \getItemName{#1}{cmdname}%
+    \csdef{\cmdname}{}% 
+}
+
 \lstdefinelanguage
    [sparc]{Assembler}     % add a "x64" dialect of Assembler
    [x86masm]{Assembler} % based on the "x86masm" dialect
@@ -216,6 +323,96 @@ at #5 {#7};
     {\bf \huge \insertframenumber}
 }
 
+\definecolor{darkGreen}{RGB}{0,127,0}
+\definecolor{darkYellow}{RGB}{127,127,0}
+\definecolor{darkRed}{RGB}{127,0,0}
+\definecolor{darkPurple}{RGB}{127,0,127}
+\colorlet{colorFETCH}{gray!40!white}
+\colorlet{colorSAT}{yellow!40!white}
+\colorlet{colorCOM}{green!40!white}
+\colorlet{colorBUG}{red!20!white}
+\colorlet{colorPROP}{green!80!black}
+\colorlet{colorNPROP}{red!80!black}
+\colorlet{colorVAL}{green!80!black}
+\colorlet{colorPROM}{darkGreen}
+\colorlet{colorSHADE}{gray!70}
+
+\colorlet{colorPO}{gray!60!black}
+\colorlet{colorRF}{green!60!black}
+\colorlet{colorMO}{orange}
+\colorlet{colorFR}{purple}
+\colorlet{colorECO}{red!80!black}
+\colorlet{colorSYN}{green!40!black}
+\colorlet{colorHB}{blue}
+\colorlet{colorPPO}{magenta}
+\colorlet{colorPB}{olive}
+\colorlet{colorSBRF}{olive}
+\colorlet{colorRMW}{olive!70!black}
+\colorlet{colorRSEQ}{blue}
+\colorlet{colorSC}{violet}
+\colorlet{colorPSC}{violet}
+\colorlet{colorREL}{olive}
+\colorlet{colorCONFLICT}{olive}
+\colorlet{colorRACE}{olive}
+\colorlet{colorWB}{orange!70!black}
+\colorlet{colorPSC}{violet}
+\colorlet{colorSCB}{violet}
+\colorlet{colorDEPS}{violet}
+
+\tikzset{
+   every path/.style={>=stealth},
+   po/.style={->,color=brown,,shorten >=-0.5mm,shorten <=-0.5mm},
+   rf/.style={->,color=green!60!black,dashed,,shorten >=-0.5mm,shorten <=-0.5mm},
+   fr/.style={->,color=red,thick,shorten >=-0.5mm,shorten <=-0.5mm},
+   mo/.style={->,color=orange!60!red,dotted,thick,shorten >=-0.5mm,shorten <=-0.5mm},
+   no/.style={->,dotted,thick,shorten >=-0.5mm,shorten <=-0.5mm},
+   deps/.style={->,color=violet,dotted,thick,shorten >=-0.5mm,shorten <=-0.5mm},
+}
+
+\newcommand{\lX}{\mathtt{X}}
+\newcommand{\lPO}{{\color{colorPO}\mathtt{po}}}
+\newcommand{\lRF}{{\color{colorRF} \mathtt{rf}}}
+\newcommand{\lRMW}{{\color{colorRMW} \mathtt{rmw}}}
+\newcommand{\lMO}{{\color{colorMO} \mathtt{mo}}}
+\newcommand{\lMOx}{{\color{colorMO} \mathtt{mo}}_x}
+\newcommand{\lMOy}{{\color{colorMO} \mathtt{mo}}_y}
+\newcommand{\lCO}{{\color{colorMO} \mathtt{co}}}
+\newcommand{\lCOx}{{\color{colorMO} \mathtt{co}}_x}
+\newcommand{\lCOy}{{\color{colorMO} \mathtt{co}}_y}
+\newcommand{\lFR}{{\color{colorFR} \mathtt{fr}}}
+\newcommand{\lFRx}{{\color{colorFR} \mathtt{fr}}_x}
+\newcommand{\lFRy}{{\color{colorFR} \mathtt{fr}}_y}
+\newcommand{\lECO}{{\color{colorECO} \mathtt{eco}}}
+\newcommand{\lSBRF}{{\color{colorSBRF} \mathtt{sbrf}}}
+\newcommand{\lRSEQ}{{\color{colorRSEQ}\mathtt{rseq}}}
+\newcommand{\lSW}{{\color{colorSYN}\mathtt{sw}}}
+\newcommand{\lHB}{{\color{colorHB}\mathtt{hb}}}
+%\newcommand{\lWB}{{\color{colorWB} \mathtt{wb}}}
+\newcommand{\lDOB}{{\mathtt{dob}}}
+\newcommand{\lBOB}{{\mathtt{bob}}}
+\newcommand{\lAOB}{{\mathtt{aob}}}
+\newcommand{\lOBS}{{\mathtt{obs}}}
+\newcommand{\lEORD}{{\mathtt{eord}}}
+\newcommand{\lTORD}{{\mathtt{tord}}}
+\newcommand{\lSC}{{\mathtt{sc}}}
+
+\tikzset{
+    ncbar angle/.initial=90,
+    ncbar/.style={
+        to path=(\tikztostart)
+        -- ($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)
+        -- ($(\tikztotarget)!($(\tikztostart)!#1!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztotarget)$)!\pgfkeysvalueof{/tikz/ncbar angle}:(\tikztostart)$)
+        -- (\tikztotarget)
+    },
+    ncbar/.default=0.5cm,
+}
+
+\tikzset{square left brace/.style={ncbar=0.3cm}}
+\tikzset{square right brace/.style={ncbar=-0.3cm}}
+
+\tikzset{round left paren/.style={ncbar=0.5cm,out=120,in=-120}}
+\tikzset{round right paren/.style={ncbar=0.5cm,out=60,in=-60}}
+
 \begin{document}
 \title
 {Операционные методы в приложении к слабым моделям памяти}
@@ -237,10 +434,6 @@ at #5 {#7};
 \newcommand{\ite}[1]{\begin{itemize} #1 \end{itemize}}
 \newcommand{\iteN}[1]{\begin{enumerate} #1 \end{enumerate}}
 \newcommand{\colu}[2]{\begin{column}{#1} #2 \end{column}}
-\definecolor{darkGreen}{RGB}{0,127,0}
-\definecolor{darkYellow}{RGB}{127,127,0}
-\definecolor{darkRed}{RGB}{127,0,0}
-\definecolor{darkPurple}{RGB}{127,0,127}
 \newcommand{\ex}{\textbf{Ex: }}
 \newcommand{\exN}[1]{\textbf{Ex #1: }}
 \newcommand{\df}{\textbf{Def: }}
@@ -248,6 +441,7 @@ at #5 {#7};
 \newcommand{\lstasm}[1]{\lstinputlisting[language={[sparc]Assembler}]{codes/#1}}
 \newcommand{\lstinlineasm}[1]{\lstinline[language={[sparc]Assembler}]{#1}}
 \newcommand{\fri}[2]{\fr{#1}{\ite{#2}}}
+\newcommand{\fre}[2]{\fr{#1}{\iteN{#2}}}
 \newcommand{\frc}[2]{\fr{#1}{\begin{columns} #2 \end{columns}}}
 \newcommand{\colui}[2]{\colu{#1}{\ite{#2}}}
 \newcommand{\phrase}[1]{
@@ -290,15 +484,15 @@ at #5 {#7};
 \newcommand{\valw}{\mathit{val}_{\sf w}}
 \newcommand{\flab}{\texttt{F}}
 
-\newcommand{\dimslide}{
-   \addtooverlay<.(1)->{%
+\newcommand{\dimslide}[1]{
+   \addtooverlay<#1>{%
      \draw[fill=black,opacity=0.70] 
      (current page.north east) rectangle (current page.south west);
    }
 }
 \NewDocumentCommand{\dimalert}{r<> m}{%
 \only<#1>{
-\dimslide
+\dimslide{#1}
 \begin{textblock*}{\textwidth}(0.1\textwidth,0.4\textheight)
 \begin{alertblock}{}
   \LARGE #2
@@ -308,10 +502,51 @@ at #5 {#7};
 }
 \newcommand{\cntrd}[1]{ \begin{center} #1 \end{center} }
 
-%% \bibliographystyle{plainurl}% the recommended bibstyle
-%% \bibliographystyle{abbrv}
-\bibliographystyle{apalike}
-%% \bibliography{references,proceedings}
+\newcommand{\instBackground}[2]{
+    \fill[#1, rounded corners=3pt] ($(#2)  + (-1.1,0.35)$) rectangle ++(2.2,-0.7);
+}
+\newcommand{\parLines}[1]{
+      \draw[-,ultra thick] ($(#1) + (-0.1,0.5)$) -- ($(#1) + (-0.1,-0.5-0.8)$);
+      \draw[-,ultra thick] ($(#1) + ( 0.1,0.5)$) -- ($(#1) + ( 0.1,-0.5-0.8)$);
+}
+
+\newcommand{\indepCommentLeft}[2]{
+      \draw[-,red,ultra thick] ($(#1) + (0.1, 0)$)
+        to[out=0,in=0] ($(#2) + (0.1, 0)$);
+      \node[anchor=west] at ($(#1) + (0.3, -0.4)$)  {\Large \textcolor{red}{Independent}};
+}
+
+\newcommand{\indepCommentRight}[2]{
+      \draw[-,red,ultra thick] ($(#1) + (0.1, 0)$)
+        to[out=180,in=180] ($(#2) + (0.1, 0)$);
+      \node[anchor=east] at ($(#1) + (-0.1, -0.4)$)  {\Large \textcolor{red}{Independent}};
+}
+
+\newcommand{\promMsg}[3]{\angled{#1:#2@\tstampWOsize{#3}}}
+
+\newcommand{\ptrPromise}[1]{
+    \draw[->,ultra thick] ($(#1)  + (-3.0,0.39)$) -- +(1.9, 0.0);
+    \node at ($(#1) + (-2.1,0.62)$) {\large $\Promise$};
+}
+\newcommand{\ptrPromiseLeft}[1]{
+    \draw[->,ultra thick] ($(#1)  + (-1.2,0.39)$) -- +(1.6, 0.0);
+}
+\newcommand{\ptrPromiseRight}[1]{
+  \ptrPromiseLeft{#1}
+    %% \draw[->,ultra thick] ($(#1)  + (3.0,0.39)$) -- +(-1.9, 0.0);
+}
+\newcommand{\promisedBorder}[1]{
+    \draw[colorPROM, ultra thick, rounded corners=3pt] ($(#1)  + (-1.1,0.35)$) rectangle ++(2.2,-0.7);
+}
+\newcommand{\promisedCommentDown}[1]{
+    \node at ($(#1) + (0, -0.6)$) {\Large \textcolor{colorPROM}{Promised}};
+}
+\newcommand{\promisedCommentLeft}[1]{
+    \node[anchor=east] at ($(#1) - (1.4, 0.0)$) {\Large \textcolor{colorPROM}{Promised}};
+}
+\newcommand{\promisedCommentRight}[1]{
+    \node[anchor=west] at ($(#1) + (1.4, 0.0)$) {\Large \textcolor{colorPROM}{Promised}};
+}
 
 {\setbeamertemplate{footline}{}\setbeamertemplate{headline}{}\frame[plain,noframenumbering]{\titlepage}}
 %% \begin{frame}[plain,noframenumbering]
@@ -331,100 +566,210 @@ at #5 {#7};
 %% }
 
 \section{Контекст и мотивация}
-
-\fr{}{
-\LARGE
-$$\begin{array}{c}
-\uncover<7->{\hspace{12pt} [x] := 0; [y] := 0} \\
-\begin{array}{l||l}
-\only<-10,13->{\inarr{
-  \tikzmark{reorder1} {} [x] := 1;  \\
-  \tikzmark{reorder2} a := [y]
-}}
-\only<11-12>{\inarr{
-  a := [y]; \\
-  {} [x] := 1
-}}
-\uncover<7->{& \inarr{
-  {} [y] := 1; \\
-  b := [x]
-}}
-\end{array}\end{array}$$
-
-\mycallout<2>{green}{(reorder1)}{(-0.5cm, -0.5cm)}{{\bf Компилятор:} \\ Независимые обращения. \\ Можно переупорядочить.}
-\mycallout<3>{blue}{(reorder2)}{(-0.5cm, 1.0cm)}{{\bf Процессор:} \\ Независимые обращения. \\ Можно выполнить не по порядку.}
-
-\dimalert<5>{Всегда ли корректны такие преобразования?}
-
-\only<8-11>{\cntrd{\textcolor{red}{a = b = 0}}}
-
-\dimalert<9>{А если переупорядочить?}
-
-\only<12->{\cntrd{\textcolor{darkGreen}{a = b = 0}}}
-\only<14->{\cntrd{\bf \alert{Такое поведение наблюдается для GCC + x86!}}}
-
-    \tikz[remember picture, overlay]{ \draw<10,13->[<->,ultra thick] (reorder2) to[out=178,in=182] (reorder1); }
+\phrase{
+  {\bf Модель памяти} (МП) --- это семантика многопоточной системы\\
 }
 
-\fr{}{
-  \huge
-  Подобные поведения называются {\bf слабыми}\pause,
-  а семантики --- {\bf слабыми моделями памяти}
+\phrase{
+  Последовательная консистентность (SC) \cite{Lamport:TC79}
+  \vfill
+  \pause
+  \emph{семантика системы --- попеременное исполнение потоков}
 }
 
-\fri{План}{
-\item Существующие модели
-\item Проблемы C/C++11. OOTA
+\newcommand{\loadBufferValues}[2]{
+      \node (memoryValues) at ($(middleBuffer) + (2.0, -3.2)$) {};
+
+      \onslide<\storageAppearFr->{
+        %% \storageTwoThreadsRelative{(leftBuffer)}{(rightBuffer)}{1.7}{0.5}{-3.0}
+        \draw[draw,fill=yellow!20] ($(memoryValues) + (-1.9,0.8)$) rectangle ($(memoryValues) + (1.9,-0.3)$) ;
+        \node[anchor=north] at ($(memoryValues) + (0,0.85)$) {\Large Память};
+      }
+
+      \node at ($(memoryValues) + (-0.05, -0.1)$) {\Large $;$}; 
+      \node<-\befPropWriteRightFr>[anchor=east] at (memoryValues) {\Large $\writeReq{x}{0}$}; 
+      \node<\propWriteRightFr->[anchor=east] at (memoryValues) {\Large $\writeReq{x}{\textcolor{colorVAL}{1}}$}; 
+      \node<-\befPropWriteLeftFr>[anchor=west] at (memoryValues) {\Large $\writeReq{y}{0}$}; 
+      \node<\propWriteLeftFr->[anchor=west] at (memoryValues) {\Large $\writeReq{y}{\textcolor{colorVAL}{1}}$}; 
+
+      \node (values) at ($(memoryValues) + (-4.0, 0.0)$) {};
+      
+      \onslide<\firstFr->
+        { \draw[draw,fill=yellow!20] ($(values) + (-1.9,  0.8)$) rectangle
+                                     ($(values) + ( 1.9, -0.3)$) ;
+          \node[anchor=north] at ($(values) + (0,  0.85)$) {\Large Регистры}; }
+      \node at ($(values) + (-0.05, -0.1)$) {\Large $;$}; 
+      \node<-\befPropReadLeftFr>[anchor=east] at (values) {\Large $a = \bot$}; 
+      \node<\propReadLeftFr->[anchor=east] at (values) {\Large $a = \textcolor{colorVAL}{#1}$}; 
+      \node<-\befPropReadRightFr>[anchor=west] at (values) {\Large $b = \bot$}; 
+      \node<\propReadRightFr->[anchor=west] at (values) {\Large $b = \textcolor{colorVAL}{#2}$}; 
 }
 
-\section{Постановка задачи}
+\fr{\huge Исполнение в SC}{
+  \setorder{{firstFr, storageAppearFr,pointerAppearFr},
+            {propReadLeftFr},
+            {propReadRightFr},
+            {comRightFr, propWriteRightFr},
+            {comLeftFr, propWriteLeftFr},
+            {noWeakFr}}
+  \prevFr{\befPropWriteLeftFr}{\propWriteLeftFr}
+  \prevFr{\befPropReadLeftFr}{\propReadLeftFr}
+  \prevFr{\befPropWriteRightFr}{\propWriteRightFr}
+  \prevFr{\befPropReadRightFr}{\propReadRightFr}
 
-\fr{Результаты исследования}{
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst, node distance = 0.8cm] {};
+      \node (leftThirdInst)   [below of= leftSecondInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of=  leftFirstInst, node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of= rightFirstInst, node distance = 0.8cm] {};
+      \node (rightThirdInst)  [below of= rightSecondInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      \node (leftBuffer)   at (leftSecondInst)  {};
+      \node (rightBuffer)  at (rightSecondInst) {};
+      \node (middleBuffer) at ($.5*(leftBuffer) + .5*(rightBuffer)$) {};
+      \node (finalValues)  at ($(middleBuffer) + (0, -4.5)$) {};
+
+      \onslide<\pointerAppearFr-\befPropReadLeftFr>
+        { \ptrPromiseLeft{leftFirstInst} } 
+      \onslide<\propReadLeftFr-\befPropWriteLeftFr>
+        { \ptrPromiseLeft{leftSecondInst} } 
+      \onslide<\propWriteLeftFr->
+        { \ptrPromiseLeft{leftThirdInst} } 
+
+      \onslide<\pointerAppearFr-\befPropReadRightFr>
+        { \ptrPromiseRight{rightFirstInst} }
+      \onslide<\propReadRightFr-\befPropWriteRightFr>
+        { \ptrPromiseRight{rightSecondInst} } 
+      \onslide<\propWriteRightFr->
+        { \ptrPromiseRight{rightThirdInst} } 
+
+      \loadBufferValues{0}{0}
+
+      \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+      \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+      \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+      \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+      \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+      \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      
+      \onslide<\noWeakFr>
+        { \draw[fill=red!30,rounded corners=3pt]
+            ($(middleBuffer) + (-5.4, -1.0)$) rectangle
+            ($(middleBuffer) + ( 5.4, -2.0)$);
+          \node at ($(middleBuffer) + (0, -1.5)$)
+          { \huge Невозможно получить $a = b = 1$ }; }
+    \end{tikzpicture}
+  }
 }
 
-\section{Результаты}
-
-\fr{Операционный вариант модели памяти C/C++11}
-{Сначала мы расскажем о той части, которая совпадает в обоих моделях. Потом введем обещания.}
-
-\fr{Корректность компиляции}{}
-
-\fr{\LARGE Публикации}{
-  \footnotesize
-
-  \begin{block}{ВАК}
-    \begin{itemize}
-      \item О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель ARMv8.3,
-        НТВ СПбГПУ \#4 2017 \\
-        (А. Подкопаев, О. Лахав, В. Вафеядис)
-    \end{itemize}
-  \end{block}
-
-  \begin{block}{Scopus, Web of Science}
-    \begin{itemize}
-      \item Promising compilation to ARMv8 POP, ECOOP 2017 \\
-         (A. Podkopaev, O. Lahav, V. Vafeiadis)
-    \end{itemize}
-  \end{block}
-
-  \begin{block}{arXiv}
-    \begin{itemize}
-      \item Operational Aspects of C/C++ Concurrrency, 2016 \\
-         (A. Podkopaev, I. Sergey, A. Nanevski)
-    \end{itemize}
-  \end{block}
-}
-
-\fri{\huge Планы на будущее}{
+\phrase{
   \LARGE
-  \item Компиляция из всей обещающей машины в ARMv8.3 и Power в Coq
-  \item Логика для программ в обещающей машине
+  Не-SC исполнения --- {\bf слабые}
+  \vfill
+  \pause
+  {\bf Слабые} МП разрешают \\ слабые исполнения 
+  \vfill
+  \pause
+  Реальные системы имеют слабые МП \\
+  \pause
+  {\Large (x86, Power, ARM, C++, Java)}
 }
 
-\fr{\Huge Результаты}{
-  \pause \cntrd{\huge \textcolor{red}{Спасибо!}}
+\phrase{
+  Почему системы имеют слабые МП?
 }
 
+\fr{\huge Процессоры и компиляторы \newline {\bf оптимизируют} программы}{
+  \setorder{{firstFr}, {listFr}, {correctFr}, {oneThreadFr}, {weakFr}}
+  \LARGE
+  
+  \uncover<\listFr->{
+    \ite{
+    \large
+      \item переупорядочивание инструкций \tikzmark{reorder}
+      \item кэш
+      \item буферы
+      \item удаление чтения после записи 
+      \item спекулятивное исполнение
+      \item удаление искусственной зависимости \tikzmark{fakeelim}
+      \item {\Huge \dots} \tikzmark{dots}
+    }
+  }
+
+  \vfill
+  
+  \onslide<\weakFr->{
+    Приводит к слабым исполнениям
+  }
+  
+  \onslide<\correctFr>{
+    \tikz[remember picture, overlay]{
+      \draw [decorate,decoration={brace,amplitude=10pt},xshift=-4pt,yshift=0pt,thick]
+            let \p1 = (reorder) in
+            let \p2 = (dots) in
+            let \p3 = (fakeelim) in
+            (\x3, \y1) -- (\x3, \y2)
+            node [anchor=west,black,midway,xshift=0.4cm] {\Large Корректны};
+    }
+  }
+
+  \onslide<\oneThreadFr->{
+    \tikz[remember picture, overlay]{
+      \draw [decorate,decoration={brace,amplitude=10pt},xshift=-4pt,yshift=0pt,thick]
+            let \p1 = (reorder) in
+            let \p2 = (dots) in
+            let \p3 = (fakeelim) in
+            (\x3, \y1) -- (\x3, \y2)
+            node [anchor=west,black,midway,xshift=0.4cm] (test) {\Large Корректны};
+      \node [anchor=west,below of=test, node distance=0.45cm,xshift=0.1cm] {\Large для {\bf одного}};
+      \node [anchor=west,below of=test, node distance=0.9cm,xshift=-0.5cm] {\Large потока};
+    }
+  }
+}
+
+%% \fr{}{
+%% \LARGE
+%% $$\begin{array}{c}
+%% \uncover<7->{\hspace{12pt} [x] := 0; [y] := 0} \\
+%% \begin{array}{l||l}
+%% \only<-10,13->{\inarr{
+%%   \tikzmark{reorder1} {} [x] := 1;  \\
+%%   \tikzmark{reorder2} a := [y]
+%% }}
+%% \only<11-12>{\inarr{
+%%   a := [y]; \\
+%%   {} [x] := 1
+%% }}
+%% \uncover<7->{& \inarr{
+%%   {} [y] := 1; \\
+%%   b := [x]
+%% }}
+%% \end{array}\end{array}$$
+
+%% \mycallout<2>{green}{(reorder1)}{(-0.5cm, -0.5cm)}{{\bf Компилятор:} \\ Независимые обращения. \\ Можно переупорядочить.}
+%% \mycallout<3>{blue}{(reorder2)}{(-0.5cm, 1.0cm)}{{\bf Процессор:} \\ Независимые обращения. \\ Можно выполнить не по порядку.}
+
+%% \dimalert<5>{Всегда ли корректны такие преобразования?}
+
+%% \only<8-11>{\cntrd{\textcolor{red}{a = b = 0}}}
+
+%% \dimalert<9>{А если переупорядочить?}
+
+%% \only<12->{\cntrd{\textcolor{darkGreen}{a = b = 0}}}
+%% \only<14->{\cntrd{\bf \alert{Такое поведение наблюдается для GCC + x86!}}}
+
+%%     \tikz[remember picture, overlay]{ \draw<10,13->[<->,ultra thick] (reorder2) to[out=178,in=182] (reorder1); }
+%% }
+
+%% \fr{}{
+%%   \huge
+%%   Подобные поведения называются {\bf слабыми}\pause,
+%%   а семантики --- {\bf слабыми моделями памяти}
+%% }
 
 %% \fr{}{
 
@@ -467,6 +812,324 @@ $$\begin{array}{c}
 %%     }
 %%   %% }
 %% }
+
+\begin{frame}<-5>{\huge МП для языков программирования}
+  \setorder{{firstFr},{appearFr, reqFr},
+            {notionEffImplFr, effImplFr},
+            {notionComplOptFr, complOptFr},
+            {notionHighLevelFr, ootaFr, highLevelFr},
+            {notionUndefBehFr}, {undefBehFr},
+            {promiseFr},{complCorFr}}
+
+  %% \large
+
+  \uncover<\appearFr->{
+  \begin{tabular}{@{}l l | l | l | l}
+    \uncover<\effImplFr->{& {\bf ЭК}}   \uncover<\complOptFr->{& {\bf КО}}
+    \uncover<\highLevelFr->{& Нет {\bf ЗВ}} \uncover<\undefBehFr->{& No {\bf UB}} \\
+    %% \tabitem
+    SC МП, \cite{Lamport:TC79}
+      \uncover<\effImplFr->{& \fail}   \uncover<\complOptFr->{& \fail}
+      \uncover<\highLevelFr->{& \tick} \uncover<\undefBehFr->{& \tick} \\
+    %% \tabitem
+    Java МП\tikzmark{jmm}, \cite{Manson-al:POPL05} \tikzmark{java}
+      \uncover<\effImplFr->{& \tick}   \uncover<\complOptFr->{& \fail}
+      \uncover<\highLevelFr->{& \tick} \uncover<\undefBehFr->{& \tick} \\
+    %% \tabitem
+    C/C++11 МП, \cite{Batty-al:POPL11} \tikzmark{cpp}
+      \uncover<\effImplFr->{& \tick}   \uncover<\complOptFr->{& \tick$^{*}$}
+      \uncover<\highLevelFr->{& \fail} \uncover<\undefBehFr->{& \fail} \\
+    \\
+    \uncover<\promiseFr->{%
+      %% \tabitem
+      Proposed solution \cite{Kang-al:POPL17}\tikzmark{Promise}
+      \uncover<\effImplFr->{& \tick\tikzmark{effImplMark}}   \uncover<\complOptFr->{& \tick}
+      \uncover<\highLevelFr->{& \tick} \uncover<\undefBehFr->{& \tick} \\
+        $\quad ~~~\; \Promise$ MM, for C/C++ and Java
+    } \\
+  \end{tabular}
+  }
+  %% \vfill
+  
+  \uncover<\effImplFr->{
+  Требования:
+  \ite{
+    \item возможность {\bf Э}ффективной {\bf К}омпиляции \\ (x86, Power, ARM)
+    \item разрешение {\bf К}омпиляторных {\bf О}птимизаций
+    \item отсутствие {\bf З}начений из {\bf В}оздуха
+    %% \uncover<\notionUndefBehFr-> {\item avoid {\bf U}ndefined {\bf B}ehavior}
+  }
+  }
+
+  %% \addtooverlay<\complCorFr>{%
+  %%   \draw[colorPROM, ultra thick, rounded corners=3pt] ($(effImplMark) + (-0.45,-0.3)$) rectangle ++(0.6,0.6);
+  %% }
+
+ %%  \mycallout<\ootaFr>{yellow}{(oota)}{(-1.0cm, -1.0cm)}{
+ %%    $\comment{Out\text{-}Of\text{-}Thin\text{-}Air}$ \\
+ %%    $\begin{array}{l || l}
+ %%    a := [x]; \comment{42} & b := [y]; \comment{42} \\
+ %% {} [y] := a; & [x] := b; \\
+ %%    \end{array}$
+ %%  }
+\end{frame}
+
+\fri{План}{
+\item Существующие модели
+\item Проблемы C/C++11. OOTA
+}
+
+\section{Результаты}
+
+\fr{Операционный вариант модели памяти C/C++11}
+{Сначала мы расскажем о той части, которая совпадает в обоих моделях. Потом введем обещания.}
+
+\fr{Корректность компиляции}{}
+
+\section{Итоги}
+
+\fr{\LARGE Публикации}{
+  \footnotesize
+
+  \begin{block}{ВАК}
+    \begin{itemize}
+      \item О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель ARMv8.3
+        @ НТВ СПбГПУ'17 \#4; \\
+        {\color{darkGreen}{*}}А. Подкопаев, О. Лахав, В. Вафеядис
+      \item Обещающая компиляция в ARMv8.3{\color{darkGreen}{*}} @ Откр. конф. ИСП РАН'17
+        %% (А. Подкопаев, О. Лахав, В. Вафеядис)
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{SCOPUS и Web of Science}
+    \begin{itemize}
+      \item Promising compilation to ARMv8 POP{\color{darkGreen}{*}} @ ECOOP'17 \\
+         %% (A. Podkopaev, O. Lahav, V. Vafeiadis)
+    \end{itemize}
+  \end{block}
+
+  \begin{block}{Остальные}
+    \begin{itemize}
+      \item Обещающая компиляция в ARMv8{\color{darkGreen}{*}} @ PLC'17
+      \item Operational Aspects of C/C++ Concurrrency @ arXiv'16; \\
+         A. Podkopaev, I. Sergey, A. Nanevski
+    \end{itemize}
+  \end{block}
+}
+
+\fri{\huge Планы на будущее}{
+  \LARGE
+  \item Компиляция из всей обещающей машины в ARMv8.3 и Power в Coq
+  \vfill
+  \item Логика для программ в обещающей машине
+}
+
+\fr{\Huge Результаты}{
+  \large
+  \begin{itemize}
+    \item Разработан операционный аналог модели C/C++11 \\
+    {\scriptsize [Интерпретатор: \url{github.com/anlun/OperationalSemanticsC11}]}
+    \vfill
+    \item Доказана корректность компиляции из ``обещающей'' модели (ККОМ) в операционную ARMv8 POP
+    \vfill
+    \item Разработан метод доказательства ККОМ в аксиоматические модели
+    \vfill
+    \item Доказана ККОМ в аксиоматическую ARMv8.3
+  \end{itemize}
+  \pause {\cntrd{\huge \textcolor{red}{Спасибо!}}}
+}
+
+\begin{frame}[allowframebreaks]{Ссылки}
+\bibliographystyle{apalike}
+\scriptsize
+\bibliography{main}
+\end{frame}
+
+%% \begin{comment}
+\iffalse
+\phrase{
+  Модель памяти для ЯП? \pause \\
+  Должна соответствовать \\ \textbf{3} критериям
+}
+
+\fr{\huge 1. Эффективная компиляция}{
+  \setorder{{firstFr},{programFr}, {scmmFr}, {powermmFr}, {compiledFr}, {noteffFr}}
+  %% \LARGE
+  %% {\bf Ex.} SC MM requires fences
+
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst, node distance = 0.8cm] {};
+      \node (leftThirdInst)   [below of= leftSecondInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of=  leftFirstInst, node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of= rightFirstInst, node distance = 0.8cm] {};
+      \node (rightThirdInst)  [below of= rightSecondInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      
+      \uncover<\programFr->{
+        \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+        \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+        \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+        \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+        \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+        \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      }
+      
+      \uncover<\scmmFr->{
+        \node[anchor=west] at
+          ($.5*(leftFirstInst) + .5*(leftSecondInst) + (-7.0, 0.0)$) {\large Исходная модель (SC МП)};
+      }
+
+      \node (leftFirstInstC)   [below of= leftFirstInst, node distance = 4cm] {};
+      \node (leftSecondInstC)  [below of= leftFirstInstC, node distance = 0.8cm] {};
+      \node (leftThirdInstC)   [below of= leftSecondInstC, node distance = 0.8cm] {};
+      \node (rightFirstInstC)  [right of=  leftFirstInstC, node distance = 3.0cm] {};
+      \node (rightSecondInstC) [below of= rightFirstInstC, node distance = 0.8cm] {};
+      \node (rightThirdInstC)  [below of= rightSecondInstC, node distance = 0.8cm] {};
+
+      \node (instMiddleC)   at ($.5*(leftFirstInstC) + .5*(rightFirstInstC)$) {};
+      
+      \uncover<\compiledFr->{
+        \node at (leftFirstInstC)   {\Large $\readInst{a}{x};$};
+        \node at (leftSecondInstC)  {\Large ${\rm lwsync};$};
+        \node at (leftThirdInstC)  {\Large $\writeInst{y}{1};$};
+        \node at (rightFirstInstC)  {\Large $\readInst{b}{y};$};
+        \node at (rightSecondInstC) {\Large ${\rm lwsync};$};
+        \node at (rightThirdInstC) {\Large $\writeInst{x}{1};$};
+
+        \draw[-,ultra thick] ($(instMiddleC) + (-0.1,0.5)$) -- ($(instMiddleC) + (-0.1,-0.5-1.6)$);
+        \draw[-,ultra thick] ($(instMiddleC) + ( 0.1,0.5)$) -- ($(instMiddleC) + ( 0.1,-0.5-1.6)$);
+      }
+
+      \node<\powermmFr->[anchor=west] at ($(leftSecondInstC) + (-7.0, 0.0)$) {\large Целевая модель (Power МП)};
+
+      \draw<\compiledFr->[->,thick] ($(instMiddle) + (0.0,-1.5)$) -- ($(instMiddleC) + (0.0,1.0)$);
+      \node<\noteffFr->[anchor=east] at ($.5*(instMiddle) + .5*(instMiddleC) + (0.0,-0.2)$)
+        {\Large \bf \textcolor{darkRed}{Не эффективно!}};
+    \end{tikzpicture}
+  }
+}
+
+\fr{\huge 2. Компиляторные оптимизации}{
+  \setorder{{firstFr},{programFr}, {scmmFr}, {powermmFr, compiledFr}, {behFr}}
+
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst, node distance = 0.8cm] {};
+      \node (leftThirdInst)   [below of= leftSecondInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of=  leftFirstInst, node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of= rightFirstInst, node distance = 0.8cm] {};
+      \node (rightThirdInst)  [below of= rightSecondInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      
+      \uncover<\programFr->{
+        \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+        \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+        \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+        \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+        \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+        \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      }
+      
+      \uncover<\scmmFr->{
+        \node[anchor=west] at
+          ($.5*(leftFirstInst) + .5*(leftSecondInst) + (-7.0, 0.0)$) {\large Исходная};
+      }
+
+      \node (leftFirstInstC)   [below of= leftFirstInst, node distance = 4cm] {};
+      \node (leftSecondInstC)  [below of= leftFirstInstC, node distance = 0.8cm] {};
+      \node (leftThirdInstC)   [below of= leftSecondInstC, node distance = 0.8cm] {};
+      \node (rightFirstInstC)  [right of=  leftFirstInstC, node distance = 3.0cm] {};
+      \node (rightSecondInstC) [below of= rightFirstInstC, node distance = 0.8cm] {};
+      \node (rightThirdInstC)  [below of= rightSecondInstC, node distance = 0.8cm] {};
+
+      \node (instMiddleC)   at ($.5*(leftFirstInstC) + .5*(rightFirstInstC)$) {};
+      
+      \uncover<\compiledFr->{
+        \node at (leftFirstInstC)   {\Large $\writeInst{y}{1};$};
+        \node at (leftSecondInstC)  {\Large $\readInst{a}{x};$};
+        \node at (rightFirstInstC)  {\Large $\readInst{b}{y};$};
+        \node at (rightSecondInstC) {\Large $\writeInst{x}{1};$};
+
+        \draw[-,ultra thick] ($(instMiddleC) + (-0.1,0.5)$) -- ($(instMiddleC) + (-0.1,-0.5-0.8)$);
+        \draw[-,ultra thick] ($(instMiddleC) + ( 0.1,0.5)$) -- ($(instMiddleC) + ( 0.1,-0.5-0.8)$);
+      }
+
+      \uncover<\powermmFr->{
+        \node[anchor=west] at
+          ($.5*(leftFirstInstC) + .5*(leftSecondInstC) + (-7.0, 0.0)$) {\large Оптимизированная};
+      }
+      
+      \uncover<\behFr->{
+        \draw [thick] ($(leftFirstInst) + (-0.9, 0.5)$)
+          to [square right brace] ($(leftSecondInst) + (-0.9, -0.5)$);
+        \draw [thick] ($(leftFirstInst) + (-0.9-0.15, 0.5)$)
+          to [square right brace] ($(leftSecondInst) + (-0.9-0.15, -0.5)$);
+        \draw [thick] ($(rightFirstInst) + (0.9, 0.5)$)
+          to [square left brace] ($(rightSecondInst) + (0.9, -0.5)$);
+        \draw [thick] ($(rightFirstInst) + (0.9+0.15, 0.5)$)
+          to [square left brace] ($(rightSecondInst) + (0.9+0.15, -0.5)$);
+
+        \draw [thick] ($(leftFirstInstC) + (-0.9, 0.5)$)
+          to [square right brace] ($(leftSecondInstC) + (-0.9, -0.5)$);
+        \draw [thick] ($(leftFirstInstC) + (-0.9-0.15, 0.5)$)
+          to [square right brace] ($(leftSecondInstC) + (-0.9-0.15, -0.5)$);
+        \draw [thick] ($(rightFirstInstC) + (0.9, 0.5)$)
+          to [square left brace] ($(rightSecondInstC) + (0.9, -0.5)$);
+        \draw [thick] ($(rightFirstInstC) + (0.9+0.15, 0.5)$)
+          to [square left brace] ($(rightSecondInstC) + (0.9+0.15, -0.5)$);
+      }
+
+      \node<\behFr->[rotate=90] at ($.5*(instMiddle) + .5*(instMiddleC) + (0.0,-0.5)$) {\Huge $\subseteq$};
+      %% \node<\noteffFr->[anchor=east] at ($.5*(instMiddle) + .5*(instMiddleC) + (0.0,-0.2)$)
+      %%   {\Large \bf \textcolor{darkRed}{Not efficient}};
+    \end{tikzpicture}
+  }
+}
+
+\fr{\huge 3. Отсутствие ``значений из воздуха''}{
+  \setorder{{firstFr}, {programFr}, {ootaFr}}
+
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst, node distance = 0.8cm] {};
+      \node (leftThirdInst)   [below of= leftSecondInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of=  leftFirstInst, node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of= rightFirstInst, node distance = 0.8cm] {};
+      \node (rightThirdInst)  [below of= rightSecondInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      
+      \uncover<\programFr->{
+        \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+        \node at (leftSecondInst)  {\Large $\writeInst{y}{a};$};
+        \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+        \node at (rightSecondInst) {\Large $\writeInst{x}{b};$};
+
+        \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+        \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      }
+
+      \onslide<\ootaFr>
+        { \draw[fill=red!30,rounded corners=3pt]
+            ($(instMiddle) + (-5.4, -3.0)$) rectangle
+            ($(instMiddle) + ( 5.4, -4.0)$);
+          \node at ($(instMiddle) + (0, -3.5)$)
+          { \huge C/C++11 разрешает $a = b = 42$ }; }
+    \end{tikzpicture}
+  }
+}
+\fi
+%% \end{comment}
+
+
 
 %% \fri{\Huge Результаты данной работы}{
 %% \LARGE
@@ -793,11 +1456,6 @@ $$\begin{array}{c}
 %% \cntrd{\huge \it \textcolor{red}{Спасибо!}}
 %% }
 
-%% \begin{frame}[allowframebreaks]{Ссылки}
-%% %% \bibliographystyle{abbrv}
-%% \scriptsize
-%% \bibliography{references,proceedings}
-%% \end{frame}
 
 %% \phrase{The first step is a {\bf formal semantics}}
 %% \phraseL{

@@ -1,6 +1,6 @@
 all:
 	xelatex -shell-escape "\def\ishandout{1} \input{presentation.tex}"
-	# bibtex -min-crossrefs=10 presentation
+	bibtex -min-crossrefs=10 presentation
 	xelatex -shell-escape "\def\ishandout{1} \input{presentation.tex}"
 	xelatex -shell-escape "\def\ishandout{1} \input{presentation.tex}"
 pause:

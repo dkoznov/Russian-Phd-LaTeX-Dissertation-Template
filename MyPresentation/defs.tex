@@ -259,7 +259,6 @@
 
   \newcommand\dmb{\textsf{dmb}}
   \newcommand\nop{\textsf{nop}}
-  \newcommand\ifGoto{\textsf{ifGoto}}
 
   \newcommand\ImmediateEdge{ImmediateEdge}
    
@@ -433,3 +432,23 @@
   \newcommand\armStepReadCommitP{\overset{\dashrightarrow \tId, \cpath, \text{read commit}}{\armStepP}}
   \newcommand\armStepReadCommitPrimeP{\overset{\dashrightarrow \tId', \cpath', \text{read commit}}{\armStepP}}
 
+\newcommand{\excl}[1]{}
+\newcommand{\ExclReadType}{\mathit{er}}
+\newcommand{\ExclWriteType}{\mathit{ew}}
+\newcommand{\ComWriteState}{\mathit{im}}
+
+\newcommand{\readInst}[3][\ExclReadType]{#2 \;:=_{\excl{#1}}\;[#3]}
+\newcommand{\fenceInst}[1]{\dmb \; #1}
+\newcommand{\dmbSY}{\fenceInst{\SY}}
+\newcommand{\dmbLD}{\fenceInst{\LD}}
+
+\newcommand\ifGoto{\textsf{if}-\textsf{goto}}
+\newcommand{\ifGotoInst}[2]{\textsf{if} \; #1 \; \textsf{goto} \; #2}
+\newcommand{\writeInst}[2]{[#1]\;:=\;#2}
+\newcommand{\writeExclInst}[3]{\textup{\sf atomic-write}(#1, [#2], #3)}
+\newcommand{\assignInst}[2]{#1\;:=\;#2}
+
+\newcommand{\writeReq}[2]{[#1]\leftarrow#2}
+\newcommand{\readReq}[2]{#1\leftarrow[#2]}
+
+\newcommand{\restrict}[2]{#1{\restriction_{#2}}}
