@@ -253,17 +253,46 @@ x86, Power и ARM, а также для которой будет примени
 %% диссертации формируется в разделе <<\publications>>\ файла
 %% \verb!../common/characteristic.tex!  при помощи команды \verb!\nocite! 
 
-\ifdefmacro{\microtypesetup}{\microtypesetup{protrusion=false}}{} % не рекомендуется применять пакет микротипографики к автоматически генерируемому списку литературы
-\ifnumequal{\value{bibliosel}}{0}{% Встроенная реализация с загрузкой файла через движок bibtex8
-  \renewcommand{\bibname}{\large \authorbibtitle}
-  \nocite{*}
-  \insertbiblioauthor           % Подключаем Bib-базы
-  %\insertbiblioother   % !!! bibtex не умеет работать с несколькими библиографиями !!!
-}{% Реализация пакетом biblatex через движок biber
-  %% \insertbiblioauthor           % Вывод всех работ автора
- \insertbiblioauthorgrouped    % Вывод всех работ автора, сгруппированных по источникам
-%  \insertbiblioauthorimportant  % Вывод наиболее значимых работ автора (определяется в файле characteristic во второй section)
-  \insertbiblioother            % Вывод списка литературы, на которую ссылались в тексте автореферата
-}
-\ifdefmacro{\microtypesetup}{\microtypesetup{protrusion=true}}{}
+%% \ifdefmacro{\microtypesetup}{\microtypesetup{protrusion=false}}{} % не рекомендуется применять пакет микротипографики к автоматически генерируемому списку литературы
+%% \ifnumequal{\value{bibliosel}}{0}{% Встроенная реализация с загрузкой файла через движок bibtex8
+%%   \renewcommand{\bibname}{\large \authorbibtitle}
+%%   \nocite{*}
+%%   \insertbiblioauthor           % Подключаем Bib-базы
+%%   %\insertbiblioother   % !!! bibtex не умеет работать с несколькими библиографиями !!!
+%% }{% Реализация пакетом biblatex через движок biber
+%%   %% \insertbiblioauthor           % Вывод всех работ автора
+%%  \insertbiblioauthorgrouped    % Вывод всех работ автора, сгруппированных по источникам
+%% %  \insertbiblioauthorimportant  % Вывод наиболее значимых работ автора (определяется в файле characteristic во второй section)
+%%   \insertbiblioother            % Вывод списка литературы, на которую ссылались в тексте автореферата
+%% }
+%% \ifdefmacro{\microtypesetup}{\microtypesetup{protrusion=true}}{}
 
+\newcounter{firstbib}
+
+\section*{\LARGE Публикации автора по теме диссертации}
+
+Ниже приведён перечень публикаций, где были представлены основные результаты, представляемые автором в диссертации. \\
+
+\renewcommand{\bibsection}{\noindent \textbf{\refname}}
+
+\renewcommand{\refname}{Статьи из ``Перечня рецензируемых научных изданий, в которых должны быть опубликованы основные научные результаты диссертаций на соискание ученой степени кандидата наук, на соискание ученой степени доктора наук'', сформированного согласно требованиям, установленным Министерством образования и науки Российской Федерации}
+\begin{thebibliography}{99}
+\bibitem{Podkopaev-al:NTV17} Подкопаев, А. В. О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель ARMv8.3 / А.В. Подкопаев, О. Лахав, В. Вафеядис // Научно-технические ведомости Санкт-Петербургского государственного политехнического университета информатика, телекоммуникации, управление. ---~2017. ---~Т.~4, \textnumero~??. ---~C.~??--??.
+\bibitem{Podkopaev-al:ISPRAS17} Подкопаев, А. В. Обещающая компиляция в модель ARMv8.3 / А.В. Подкопаев, О. Лахав, В. Вафеядис // Труды ИСП РАН. ---~2017. ---~Т.~?, \textnumero~??. ---~C.~??--??.
+\setcounter{firstbib}{\value{enumiv}}
+\end{thebibliography}
+
+\renewcommand{\refname}{Статьи в изданиях, входящих в базы цитирования Web of Science и SCOPUS}
+\begin{thebibliography}{99}
+\setcounter{enumiv}{\value{firstbib}}
+\bibitem{Podkopaev-al:ECOOP17} Podkopaev, A. Promising compilation to ARMv8 POP / A. Podkopaev, O. Lahav, V. Vafeiadis // 31st European Conference on Object-Oriented Programming (ECOOP 17), Leibniz International Proceedings in Informatics (LIPIcs),  ---~2017. ---~P.~22:1--22:28.
+\setcounter{firstbib}{\value{enumiv}}
+\end{thebibliography}
+
+\renewcommand{\refname}{Статьи в других изданиях}
+\begin{thebibliography}{99}
+\setcounter{enumiv}{\value{firstbib}}
+\bibitem{Podkopaev-al:PLC17} Подкопаев, А. В. Обещающая компиляция в ARMv8 / А.В. Подкопаев, О. Лахав, В. Вафеядис // Языки программирования и компиляторы. Под. ред. Д.В. Дубров. Труды конференции. Ростов-на-Дону, Россия, ---~2017. ---~C.~223--226.
+\bibitem{Podkopaev-al:CoRR16} Podkopaev, A. Operational Aspects of {C/C++} Concurrency / A. Podkopaev, I. Sergey, A. Nanevski // ArXiv, 2016, 
+  \url{http://arxiv.org/abs/1606.01400}.
+\end{thebibliography}
