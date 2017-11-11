@@ -530,7 +530,7 @@ at #5 {#7};
 
 \newcommand{\ptrPromise}[1]{
     \draw[->,ultra thick] ($(#1)  + (-3.0,0.39)$) -- +(1.9, 0.0);
-    \node at ($(#1) + (-2.1,0.62)$) {\large $\Promise$};
+    \node at ($(#1) + (-2.1,0.62)$) {\large \Promise};
 }
 \newcommand{\ptrPromiseLeft}[1]{
     \draw[->,ultra thick] ($(#1)  + (-1.2,0.39)$) -- +(1.6, 0.0);
@@ -1261,7 +1261,7 @@ at #5 {#7};
         \toShadow
           {-\befOpCppSectionFr,\armPOPSectionFr,\nextArmAxSectionFr-}
           {\opCppSectionFr,\armAxSectionFr}
-        {Доказана корректность компиляции из подмножества\tikzmark{subset} ``обещающей'' модели (ККОМ) в операционную ARMv8 POP}
+        {Доказана корректность компиляции из подмножества\tikzmark{subset} ``обещающей'' модели (ККОМ) в операционную \ARMpop}
     }
     \vfill
     \uncover<\compilationAxFr->{
@@ -1275,7 +1275,7 @@ at #5 {#7};
         \toShadow
           {-\befOpCppSectionFr,\armAxSectionFr,\nextArmAxSectionFr-}
           {\opCppSectionFr,\armPOPSectionFr}
-        {Доказана ККОМ в аксиоматическую ARMv8.3}
+        {Доказана ККОМ в аксиоматическую \ARMax}
     }
   \end{itemize}
 
@@ -1293,8 +1293,131 @@ at #5 {#7};
 
 \againframe<8>{resultsFrame}
 
-\fr{``Обещающая'' модель ($\Promise$)}{}
-\fr{Корректность компиляции}{}
+\fr{\huge Исполнение в обещающей модели (\Promise)}{
+  \setorder{{firstFr, memoryAppearFr},{viewAppearFr},
+            {pointerAppearFr},{promLeftFr},
+            {readRightFr, propReadRightFr},{fulfillRightFr},
+            {readLeftFr, propReadLeftFr},{fulfillLeftFr}}
+  \prevFr{\befReadLeftFr}{\readLeftFr}
+  \prevFr{\befPropReadLeftFr}{\propReadLeftFr}
+  \prevFr{\befFulfillLeftFr}{\fulfillLeftFr}
+
+  \prevFr{\befReadRightFr}{\readRightFr}
+  \prevFr{\befPropReadRightFr}{\propReadRightFr}
+  \prevFr{\befFulfillRightFr}{\fulfillRightFr}
+
+  \cntrd{
+    \begin{tikzpicture}
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst , node distance = 0.8cm] {};
+      \node (leftThirdInst)   [below of= leftSecondInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of= leftFirstInst , node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of=rightFirstInst , node distance = 0.8cm] {};
+      \node (rightThirdInst)  [below of=rightSecondInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      \node (leftBuffer)   at (leftSecondInst)  {};
+      \node (rightBuffer)  at (rightSecondInst) {};
+      \node (middleBuffer) at ($.5*(leftBuffer) + .5*(rightBuffer)$) {};
+
+      \node (memory)           at ($(middleBuffer) + (0.0,-2.4)$) {};
+      \node (memorySecondLine) at ($(memory)       + (-1.35,-0.6)$) {};
+      
+      \onslide<\promLeftFr-\readLeftFr>
+        { \promisedBorder{leftSecondInst}
+          \promisedCommentLeft{leftSecondInst} }
+      %% \onslide<\promRightFr-\readRightFr>
+      %%   { \promisedBorder{rightSecondInst}
+      %%     \promisedCommentRight{rightSecondInst} }
+      
+      \onslide<\pointerAppearFr-\befReadLeftFr>
+        { \ptrPromiseLeft{leftFirstInst} } 
+      \onslide<\readLeftFr-\befFulfillLeftFr>
+        { \ptrPromiseLeft{leftSecondInst} } 
+      \onslide<\fulfillLeftFr->
+        { \ptrPromiseLeft{leftThirdInst} } 
+
+      \onslide<\pointerAppearFr-\befReadRightFr>
+        { \ptrPromiseRight{rightFirstInst} }
+      \onslide<\readRightFr-\befFulfillRightFr>
+        { \ptrPromiseRight{rightSecondInst} } 
+      \onslide<\fulfillRightFr->
+        { \ptrPromiseRight{rightThirdInst} } 
+      
+      \onslide<\memoryAppearFr-\pointerAppearFr>{
+        \draw[draw,fill=yellow!20] ($(memory) + (-5.0,1.5)$) rectangle ($(memory) + (5.0,-0.5)$) ;
+        \node at (memory) {\Large Memory: $[\promMsg{x}{0}{0},\promMsg{y}{0}{0}]$};
+      }
+      \onslide<\promLeftFr->{
+        \draw[draw,fill=yellow!20] ($(memory) + (-5.0,1.5)$) rectangle ($(memory) + (5.0,-1.0)$) ;
+        \node at (memory) {\Large Memory: $[\promMsg{x}{0}{0},\promMsg{y}{0}{0},$};
+      }
+      \onslide<\promLeftFr-\befFulfillRightFr>
+        { \node [anchor=west] at (memorySecondLine) {\Large $\promMsg{y}{1}{1}]$}; }
+      \onslide<\fulfillRightFr->
+        { \node [anchor=west] at (memorySecondLine) {\Large $\promMsg{y}{1}{1}, \promMsg{x}{1}{1}]$}; }
+
+      \node<\viewAppearFr-\befReadRightFr> at ($(memory) + (0,1.0)$) {\Large
+        LView: $[x@\tstampWOsize{0},y@\tstampWOsize{0}] \quad$
+        RView: $[x@\tstampWOsize{0},y@\tstampWOsize{0}]$
+      };
+      \node<\readRightFr-\befFulfillRightFr> at ($(memory) + (0,1.0)$) {\Large
+        LView: $[x@\tstampWOsize{0},y@\tstampWOsize{0}] \quad$
+        RView: $[x@\tstampWOsize{0},y@\tstampWOsize{1}]$
+      };
+      \node<\fulfillRightFr-\befReadLeftFr> at ($(memory) + (0,1.0)$) {\Large
+        LView: $[x@\tstampWOsize{0},y@\tstampWOsize{0}] \quad$
+        RView: $[x@\tstampWOsize{1},y@\tstampWOsize{1}]$
+      };
+      \node<\readLeftFr-\befFulfillLeftFr> at ($(memory) + (0,1.0)$) {\Large
+        LView: $[x@\tstampWOsize{1},y@\tstampWOsize{0}] \quad$
+        RView: $[x@\tstampWOsize{1},y@\tstampWOsize{1}]$
+      };
+      \node<\fulfillLeftFr-> at ($(memory) + (0,1.0)$) {\Large
+        LView: $[x@\tstampWOsize{1},y@\tstampWOsize{1}] \quad$
+        RView: $[x@\tstampWOsize{1},y@\tstampWOsize{1}]$
+      };
+
+      \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+      \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+      \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+      \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+      \draw[-,ultra thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+      \draw[-,ultra thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      
+      
+      \node (values)  at ($(middleBuffer) + (0, -4.5)$) {};
+      \onslide<\firstFr->
+        { \draw[draw,fill=yellow!20] ($(values) + (-1.9,  0.8)$) rectangle
+                                     ($(values) + ( 1.9, -0.3)$) ;
+          \node[anchor=north] at ($(values) + (0,  0.85)$) {\Large Values}; }
+      \node at ($(values) + (-0.05, -0.1)$) {\Large $;$}; 
+      \node<-\befPropReadLeftFr>[anchor=east] at (values) {\Large $a = \bot$}; 
+      \node<\propReadLeftFr->[anchor=east] at (values) {\Large $a = \textcolor{colorVAL}{1}$}; 
+      \node<-\befPropReadRightFr>[anchor=west] at (values) {\Large $b = \bot$}; 
+      \node<\propReadRightFr->[anchor=west] at (values) {\Large $b = \textcolor{colorVAL}{1}$}; 
+    \end{tikzpicture}
+  }
+}
+
+\fr{\Huge Корректность компиляции}{
+  \LARGE
+
+  $\onslide<3->{compile :} \tikzmark{proglang}S \onslide<3->{\rightarrow} \tikzmark{hardlang}\onslide<2->{T}$\\
+  \onslide<4->{
+  $\onslide<6->{\forall Prog \in S.} \\$
+  $\onslide<5->{\quad \semState{\onslide<6->{compile(\tikzmark{hardsem}Prog)}}{T}}$
+  $\onslide<6->{\subseteq}$
+  $\semState{\onslide<6->{Prog}\tikzmark{progsem}}{S}$.
+  }
+
+  \mycallout<1>{green}{(proglang)}{(0.0cm, 1.0cm)}{Исходный язык}
+  \mycallout<2>{green}{(hardlang)}{(0.0cm, 1.0cm)}{Целевой язык}
+
+  \mycallout<4>{green}{(progsem)}{(0.0cm, 1.0cm)}{Исходная МП}
+  \mycallout<5>{green}{(hardsem)}{(0.0cm, 1.0cm)}{Целевая МП}
+}
 
 \newcommand{\storageTwoThreadsRelative}[5]{
     \draw
@@ -1306,7 +1429,7 @@ at #5 {#7};
         (.5*\x1 + .5*\x2, #5) -- +(0,-#4);
 }
 
-\fr{\huge Исполнение в ARMv8 POP}{
+\fr{\huge Исполнение в \ARMpop}{
   \setorder{{firstFr, storageAppearFr},{grayBoxFr},
             {issueReadRightFr}, {comRightFr},
             {reorderArrowRightFr}, {reorderRightFr},
@@ -1419,29 +1542,29 @@ at #5 {#7};
   }
 }
 
-\fr{\huge Основные отличия \newline $\Promise$ от ARMv8 POP }{
+\fr{\huge Основные отличия \newline $\Promise\;$ от \ARMpop}{
 
   {\LARGE
   \begin{enumerate}
-  \item В $\Promise$ только запись исполняется не по порядку  \\
+  \item В \Promise только запись исполняется не по порядку  \\
   \vfill
-  \item В ARMv8 POP нету порядка над записями в одну локацию 
+  \item В \ARMpop нету порядка над записями в одну локацию 
   \end{enumerate}
   }
 }
 
 \begin{frame}<1,2>[label=mainingred]{\Huge \toShadow{1}{2,3-}{Основа доказательства}}
   \begin{center}
-  { \Huge  
+  { \LARGE
     \toShadow{1,2}{3-}{1. ``Запаздывающая'' симуляция} \\
     \vfill
-    \toShadow{1,3-}{2}{2. ARMv8 POP + метки времени}
+    \toShadow{1,3-}{2}{2. \ARMpop + метки времени}
   }
   \end{center}
 \end{frame}
 
 \fr{\huge ```Запаздывающая'' симуляция} {
-  \setorder{{firstFr},{justInstFr},{grayBoxFr},{grayBoxFEFr},{grayBoxPEFr},{grayBoxNEFr},{promPtrFr},
+  \setorder{{firstFr},{justInstFr},{grayBoxFr,grayBoxFEFr,grayBoxPEFr,grayBoxNEFr},{promPtrFr},
             {simRelOneFr}, {simRelTwoFr}, {simRelThreeFr},
             {satFirstFr}, {comFirstFr}, {promFirstFr}, %{satSecondFr}, 
             {comFifthFr}, {promWriteFifthFr}, %{satFourthOneFr},
@@ -1501,7 +1624,7 @@ at #5 {#7};
 
     \onslide<\promWriteFifthFr-\promSecondFr>{
       \draw[colorPROM, ultra thick, rounded corners=3pt] ($(fifthInst)  + (-1.1,0.35)$) rectangle ++(2.2,-0.7);
-      \node[anchor=west] at ($(fifthInst) + (1.4, 0.0)$) {\Large \textcolor{colorPROM}{Promised}};
+      \node[anchor=west] at ($(fifthInst) + (1.4, 0.0)$) {\Large \textcolor{colorPROM}{Обещана}};
     }
 
     %% \onslide<-\satZeroFr>  {\ptrPromise{zeroInst}};
@@ -1526,22 +1649,22 @@ at #5 {#7};
       \node at ($(secondInst) + (2.5,0.0)$) {\fontsize{50}{60}\selectfont \dots};
     }
     
-    \onslide<\grayBoxFEFr-\grayBoxNEFr>{
-      \draw[<-,ultra thick] ($(zeroInst)  + (1.2, 0.0)$) -- +(0.7,0);
-      \node[anchor=west] at ($(zeroInst)  + (2.0, 0.0)$) {\Large Fully};
-      \node[anchor=west] at ($(zeroInst)  + (3.9, 0.0)$) {\Large executed by $\ARM$};
-    }
-    \onslide<\grayBoxPEFr-\grayBoxNEFr>{
-      %% \draw[<-,ultra thick] ($(fourthInst)  + (1.2, 0.0)$) -- +(0.7,0);
-      %% \node[anchor=west] at ($(fourthInst) + (2.0, 0.0)$) {\Large Partially Executed by $\ARM$};
-      \draw[<-,ultra thick] ($(secondInst)  + (1.2, 0.0)$) -- +(0.7,0);
-      \node[anchor=west] at ($(secondInst) + (2.0, 0.0)$) {\Large Partially executed by $\ARM$};
-    }
-    \onslide<\grayBoxNEFr>{
-      \draw[<-,ultra thick] ($(fifthInst)  + (1.2, 0.0)$) -- +(0.7,0);
-      \node[anchor=west] at ($(fifthInst) + (2.0, 0.0)$) {\Large Not};
-      \node[anchor=west] at ($(fifthInst) + (3.9, 0.0)$) {\Large executed by $\ARM$};
-    }
+    %% \onslide<\grayBoxFEFr-\grayBoxNEFr>{
+    %%   \draw[<-,ultra thick] ($(zeroInst)  + (1.2, 0.0)$) -- +(0.7,0);
+    %%   \node[anchor=west] at ($(zeroInst)  + (2.0, 0.0)$) {\Large Fully};
+    %%   \node[anchor=west] at ($(zeroInst)  + (3.9, 0.0)$) {\Large executed by $\ARM$};
+    %% }
+    %% \onslide<\grayBoxPEFr-\grayBoxNEFr>{
+    %%   %% \draw[<-,ultra thick] ($(fourthInst)  + (1.2, 0.0)$) -- +(0.7,0);
+    %%   %% \node[anchor=west] at ($(fourthInst) + (2.0, 0.0)$) {\Large Partially Executed by $\ARM$};
+    %%   \draw[<-,ultra thick] ($(secondInst)  + (1.2, 0.0)$) -- +(0.7,0);
+    %%   \node[anchor=west] at ($(secondInst) + (2.0, 0.0)$) {\Large Partially executed by $\ARM$};
+    %% }
+    %% \onslide<\grayBoxNEFr>{
+    %%   \draw[<-,ultra thick] ($(fifthInst)  + (1.2, 0.0)$) -- +(0.7,0);
+    %%   \node[anchor=west] at ($(fifthInst) + (2.0, 0.0)$) {\Large Not};
+    %%   \node[anchor=west] at ($(fifthInst) + (3.9, 0.0)$) {\Large executed by $\ARM$};
+    %% }
 
     %% \onslide<\comThirdFr->{
     %%   \draw[colorPROM, ultra thick, rounded corners=3pt] ($(thirdInst)  + (-1.2,0.45)$) rectangle ++(2.4,-0.9);
@@ -1553,17 +1676,17 @@ at #5 {#7};
     }
     
     \onslide<\simRelOneFr>{
-      \node [anchor=west] at ($(sixthInst) + (-3.0,-0.5)$) { \huge $\simrel$ --- simulation relation};
+      \node [anchor=west] at ($(sixthInst) + (-3.0,-0.5)$) { \huge $\simrel$ --- инвариант};
     }
     \onslide<\simRelTwoFr->{
       \node [anchor=west] at ($(sixthInst) + (-3.0,-0.5)$)
-        { \huge $\simrel = \simrel_{\Promise \text{ is waiting}} \cup \simrel_{\Promise \text{ is executing}}$ };
+        { \huge $\simrel = \simrel_{\Promise\text{ждёт}} \cup \simrel_{\Promise\text{выполняется}}$ };
     }
     \onslide<\simRelThreeFr-\satFirstFr,\promFirstFr-\befComFifthFr,\promWriteFifthFr,\promFifthFr>{
-      \draw[ultra thick, rounded corners=3pt] ($(sixthInst) + (-1.6,0.0)$) rectangle ++(4.50,-0.9);
+      \draw[ultra thick, rounded corners=3pt] ($(sixthInst) + (-1.6,0.0)$) rectangle ++(3.65,-0.9);
     }
     \onslide<\comFirstFr,\comSecondFr,\promSecondFr>{
-      \draw[ultra thick, rounded corners=3pt] ($(sixthInst) + (3.6,0.0)$) rectangle ++(4.95,-0.9);
+      \draw[ultra thick, rounded corners=3pt] ($(sixthInst) + (2.7,0.0)$) rectangle ++(5.35,-0.9);
     }
     \end{tikzpicture}
   }
@@ -1573,7 +1696,7 @@ at #5 {#7};
 
 \againframe<3>{mainingred}
 
-\fr{\huge ARMv8 POP\only<11->{ + метки времени}}{
+\fr{\huge \ARMpop\only<11->{ + метки времени}}{
   \setorder{{firstFr}, {storageAppearFr}, {comLeftFr}, {comRightFr},
             {leftOptionFr}, {propLeftFr}, {undoPropLeftFr},
             {rightOptionFr}, {propRightFr},
@@ -1634,11 +1757,11 @@ at #5 {#7};
 
       \onslide<\leftOptionTwoFr>{
         \node[fill=green!20, rounded corners, draw,rectangle]
-          at ($(middleBuffer) + (0, -3.5)$) { \LARGE {\bf May} propagate from left }; }
+          at ($(middleBuffer) + (0, -3.5)$) { \LARGE {\bf Можно} из левого}; }
 
       \onslide<\rightOptionTwoFr>{
         \node[fill=red!20, rounded corners, draw,rectangle]
-          at ($(middleBuffer) + (0, -3.5)$) { \LARGE {\bf Cannot} propagate from right! }; }
+          at ($(middleBuffer) + (0, -3.5)$) { \LARGE {\bf Нельзя} из правого! }; }
     \end{tikzpicture}
   
     %% \vspace{1cm}
@@ -1648,20 +1771,19 @@ at #5 {#7};
   \dimalert<\alertFr>{Будем определять порядок заранее!}
 }
 
-\fr{\huge Proof Structure}{
+\fr{\huge Общая структура д-ва из \Promise в \ARMpop}{
   \LARGE
   \iteN{
-    \item Introduce $\ARMt$
+    \item Вводим промежуточную $\ARMt$
     \vfill
-    \item Prove equivalence between \\ $\ARMt$ and $\ARM$
+    \item Доказываем $\ARMt \approx \ARMpop$
     \vfill
-    \item Show ``lagging'' simulation from $\Promise$ to $\ARMt$
+    \item Показываем запаздывающую симуляцию для \Promise и $\ARMt$
   }
 }
-\fr{Запаздывающая симуляция}{}
 
 \againframe<9>{resultsFrame}
-\fr{ARMv8.3}{}
+\fr{\ARMax}{}
 \fr{Обход графа}{}
 
 \section{Итоги}
@@ -1671,10 +1793,10 @@ at #5 {#7};
 
   \begin{block}{ВАК}
     \begin{itemize}
-      \item О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель ARMv8.3
+      \item О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель \ARMax
         @ НТВ СПбГПУ'17 \#4; \\
         {\color{darkGreen}{*}}А. Подкопаев, О. Лахав, В. Вафеядис
-      \item Обещающая компиляция в ARMv8.3{\color{darkGreen}{*}} @ Откр. конф. ИСП РАН'17
+      \item Обещающая компиляция в \ARMax{\color{darkGreen}{*}} @ Откр. конф. ИСП РАН'17
         %% (А. Подкопаев, О. Лахав, В. Вафеядис)
     \end{itemize}
   \end{block}
@@ -1697,7 +1819,7 @@ at #5 {#7};
 
 \fri{\huge Планы на будущее}{
   \LARGE
-  \item Компиляция из всей обещающей машины в ARMv8.3 и Power в Coq
+  \item Компиляция из всей обещающей машины в \ARMax и Power в Coq
   \vfill
   \item Логика для программ в обещающей машине
 }
