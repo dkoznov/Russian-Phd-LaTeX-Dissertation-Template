@@ -52,168 +52,288 @@
 
 \underline{\textbf{Вторая глава}} посвящена операционному варианту модели памяти для C/С++,
 предложенному диссертантом. Модель представлена в виде операционной семантики малого шага с помощью редукционных
-контекстов.
+контекстов. Далее для обозначения упомянутой модели мы будем использовать название \OpCpp.
 
-\todo{
-План. Особенности семантики:
-\begin{itemize}
-  \item Метки времени.
-  \item Фронты.
-  \item Буферы операций, переупорядочивание инструкций.
-\end{itemize}
-}
+Основное отличие слабых моделей памяти от модели последовательной консистентности заключается в том, что
+слабые модели не гарантируют для локации в памяти единственность значения, которое может быть прочитано из локации
+в каждый конкретный момент времени.
+Так, например, следующая программа может завершиться с $a = 1, b = 0$, хотя, казалось бы, $a = 1$ гарантирует, что
+в локацию $d$ уже записано новое значение $239$:
+\[
+\begin{array}{c}
+[f] := 0; [d] := 0; \\
+\begin{array}{l||l}
+  {} [d] := 239; & a := [f]; \\
+  {} [f] := 1;   & b := [d]; \\
+\end{array}
+\end{array}
+\]
+Как следствие, оперативная память (далее просто ``память'') не может быть представлена как функция из локации в значения в рамках слабых моделей памяти.
 
-Апробация предложенной семантики была выполнена на наборе программ-тестов (litmus tests) из тематической литературы
-(см. рис. \ref{fig:litmusTbl}). \todo{TODO: Добавить описание таблички.}
+Память в модели $\OpCpp$ представляется как множество \emph{сообщений}. Каждое сообщение содержит целевую локацию, записываемое значение и
+\emph{метку времени} --- натуральное число, которое определяет полный порядок на сообщениях, относящихся к одной локации.
+Последнее нужно, чтобы гарантировать последовательную консистентность для программ, оперирующих только над одной локацией --- эту гарантию
+предоставляют большинство слабых моделей памяти, в том числе модель C/C++11.
+При выполнении инструкции чтения из некоторой локации поток может недетерминированно выбрать сообщение, относящееся к локации, и произвести
+чтение из него.
 
-{
-%% \setlength{\belowcaptionskip}{-20pt} 
-\begin{figure}[h!]
-\centering
-{\scriptsize
-%% \begin{tabular}{| l ||@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}||@{~}c@{~}|}
-\begin{tabular}{| l ||@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}||@{~}c@{~}|}
-  \hline
-  \textbf{Название теста} & \textsf{VF} & \textsf{WF} & \textsf{SCF}
-  & \textsf{NAF} & \textsf{PO} & \textsf{ARR} % & \textsf{VS}
-  & \textsf{CR} & \textsf{JN} & \textbf{C11} \\
-%
-% \textbf{Test name} & History & Viewfronts & Write-fronts & SC-front
-%           & NA-front & Postponed operations & Acquire Read Restrictions (& Value Stealing) & Consume & Joining threads w/ non-empty operation buffers & \textbf{Full Support} \\
+%% Представление памяти как множества сообщений позволяет симулировать исполнение приведенной выше программы, которое заканчивается результатом
+%% $a = 1, b = 0$, следующим образом. После выполнения Сначала левый поток выполняет 
 
-\hline\hline
-\multicolumn{10}{|c|}{Store Buffering (\textsf{SB})\ifext{, \S\ref{app:sb}}{}} \\
-\hline
-\textsf{rel+acq}   & \tick & &       & & & & & & \tick\\ 
-\textsf{sc}        & \tick & & \tick & & & & & & \tick\\ 
-\textsf{sc+rel}    & \tick & & \tick & & & & & & \tick\\ 
-\textsf{sc+acq}    & \tick & & \tick & & & & & & \tick\\ 
+Недетерминированность чтения из локации ограничена гарантией, которую также предоставляет модель C/C++11, что
+после того, как поток прочитал или записал сообщение в локацию $x$ с меткой времени $t$, он (поток) более не может читать из сообщений
+с меткой времени, которая меньше $t$. Для реализации данного ограничения в модели $\OpCpp$ у каждого потока есть т.н. \emph{базовый фронт}
+(current view, current viewfront) --- функция из локаций в метки времени, определяющая осведомленность потока о сообщениях в памяти.
 
-\hline
-\multicolumn{10}{|c|}{Load Buffering (\textsf{LB})\ifext{, \S\ref{app:lb}}{}} \\
-\hline
-\textsf{rlx}         & \tick & & & & \tick & & & & \tick\\ 
-\textsf{rel+rlx}     & \tick & & & & \tick & & & & \tick\\ 
-\textsf{acq+rlx}     & \tick & & & & \tick & & & & \fail\\ 
-\textsf{rel+acq+rlx} & \tick & & & & \tick & \tick & & & \tick\\ 
-\textsf{rlx+use}     & \tick & & & & \tick & & & & \tick\\ 
-\textsf{rlx+let}     & \tick & & & & \tick & & & & \tick\\ 
-\textsf{rlx+join}    & \tick & & & & \tick & & & \tick & \tickP\\ 
-\textsf{rel+rlx+join} & \tick & & & & \tick & & & \tick & \tickP\\ 
-\textsf{acq+rlx+join} & \tick & & & & \tick & & & \tick & \fail\\ 
+Некоторые программы имеют такие слабые исполнения, разрешенные моделью C/C++11, которые не могут быть промоделированы лишь недетерминированной
+памятью, а дополнительно требуют исполнения инструкций не по порядку. К таким относится следующая программа, которая может завершиться с
+результатом $a = 1, b = 1$ в модели C/C++11:
+\[
+\begin{array}{c}
+[x] := 0; [y] := 0; \\
+\begin{array}{l||l}
+  {} a := [x]; & b := [y]; \\
+  {} [y] := 1; & [x] := 1; \\
+\end{array}
+\end{array}
+\]
+Для представления таких исполнений в модели $\OpCpp$ у каждого потока есть \emph{буфер отложенных операций}. Так, модель
+позволяет потоку в каждый момент исполнения отложить текущую операцию вместо её выполнения.
+С помощью этого механизма модель $\OpCpp$ может исполнить приведенную выше программу и получить результат $a = 1, b = 1$ следующим образом.
+Сначала левый поток откладывает чтение из локации $x$ и выполняет запись в $y$. После этого правый поток читает из вновь добавленного
+сообщения и записывает $1$ в $x$. Теперь левый поток исполняет отложенное чтение и читает из добавленного правым потоком сообщения, получая
+$a = 1, b = 1$.
 
-\hline
-\multicolumn{10}{|c|}{Message passing (\textsf{MP})\ifext{, \S\ref{app:mp}}{}} \\
-\hline
-\textsf{rlx+na}            & \tick &       & & \tick & & &       & & \tick\\ 
-\textsf{rel+rlx+na}        & \tick &       & & \tick & & &       & & \tick\\ 
-\textsf{rlx+acq+na}        & \tick &       & & \tick & & &       & & \tick\\ 
-\textsf{rel+acq+na}        & \tick &       & & \tick & & \tick & & & \tick\\ 
-\textsf{rel+acq+na+rlx(\_2)} & \tick & \tick & & \tick & & \tick & & & \tick\\ 
-\textsf{con+na(\_2)}       & \tick &       & & \tick & & & \tick & & \tick\\ 
-\textsf{cas+rel+acq+na}    & \tick &       & & \tick & & \tick & & & \tick\\ 
-\textsf{cas+rel+rlx+na}    & \tick &       & & \tick & & &     & & \tick\\ 
+Для поддержки высвобождающих (release) барьеров и записей и приобретающих (acquire) барьеров и чтений
+модель $\OpCpp$ использует дополнительные фронты --- высвобождающий и приобретающий фронты у каждого потока,
+а также фронт сообщений у каждого сообщения в памяти. Для поддержки чтений с модификатором доступа
+consume модель использует динамическую синтаксическую пометку зависимых от consume-чтения инструкций.
 
-\hline
-\multicolumn{10}{|c|}{Coherence of Read-Read (\textsf{CoRR})\ifext{, \S\ref{app:corr}}{}} \\
-\hline
-\textsf{rlx}      & \tick & &       & & &  & & & \tick\\ 
-\textsf{rel+acq}  & \tick & &       & & &  & & & \tick\\ 
+%% Рассмотрим следующую программу, в которой левый поток передает сообщение через локацию $d$ в правый поток:
+%% \[
+%% \begin{array}{c}
+%% [f] := 0; [d] := 0; \\
+%% \begin{array}{l||l}
+%%   {} [d] := 239; & a := [f]; \\
+%%   {} [f] := 1;   & b := [d]; \\
+%% \end{array}
+%% \end{array}
+%% \]
+%% Здесь локация $f$ используется как индекс того, что левый поток уже записал нужные данные в локацию $d$.
+%% В рамках модели последовательной консистентности гарантируется, что если $a = 1$, т.е. правый поток
+%% ``увидел'' запись в $f$, то дальше он прочитает из записи в $d$, сделанной левым потоком, и в результате $b$ будет
+%% равняться $239$. Это гарантируется тем, что 
 
-\hline
-\multicolumn{10}{|c|}{Independent Reads of Independent Writes (\textsf{IRIW})\ifext{, \S\ref{app:iriw}}{}} \\
-\hline
-\textsf{rlx}      & \tick & &       & & &  & & & \tick\\ 
-\textsf{rel+acq}  & \tick & &       & & &  & & & \tick\\ 
-\textsf{sc}       & \tick & & \tick & & &  & & & \tick\\ 
+Для модели был реализован интерпретатор на языке Racket с помощью библиотеки описания редукционных
+семантик PLT/Redex. Код проекта доступен по адресу \url{github.com/anlun/OperationalSemanticsC11}.
 
-\hline
-\multicolumn{10}{|c|}{Write-to-Read Causality (\textsf{WRC})\ifext{, \S\ref{app:wrc}}{}} \\
-\hline
-\textsf{rlx}      & \tick & &       & & & &  & & \tick\\ 
-\textsf{rel+acq}  & \tick & &       & & & &  & & \tick\\ 
-\textsf{cas+rel}  & \tick & &       & & & \tick & & & \tick\\ 
-\textsf{cas+rlx}  & \tick & &       & & & &  & & \tick\\ 
+Апробация предложенной семантики была выполнена на наборе из более чем 40 программ-тестов (litmus tests) из тематической литературы
+и алгоритме RCU (Read-Copy-Update). Модель $\OpCpp$ совпадает с моделью C/C++11 на большинстве из них.
+Отличие моделей наблюдается на двух категориях тестов. Первая категория это программы, которые имеют исполнения со
+значениями из воздуха в рамках модели C/C++11. Для таких тестов модель $\OpCpp$ не выдает исполнения со значениями из воздуха,
+что является её положительным свойством. Вторая категория это программы, в которых существуют антизависимости по управлению,
+адресу или значению, ведущие к инструкциям записи. На таких программах $\OpCpp$ не способна получить все возможные в рамках C/C++11
+исполнения, поскольку выполнение инструкций не по порядку в $\OpCpp$ реализовано синтаксическим образом. Это недостаток модели,
+который не позволяет поддержать все необходимые компиляторные оптимизации.
 
-\hline
-\multicolumn{10}{|c|}{Out-of-Thin-Air (\textsf{OTA})\ifext{, \S\ref{app:ota}}{}} \\
-\hline
-\textsf{lb}       & \tick & &       & & \tick & & & & \fail\\ 
-\textsf{if}       & \tick & &       & & \tick & & & & \fail\\ 
+Одновременно с моделью памяти $\OpCpp$, исследователями Kang, Hur, Lahav, Vafeiadis и Dreyer была представлена ``обещающая'' модель
+памяти, которая очень близка $\OpCpp$, но использует другой механизм для выполнения инструкций не по порядку, который позволяет
+поддержать большее число компиляторных оптимизаций, чем модель $\OpCpp$.
+Из-за данного преимущества диссертант принял решение продолжить свою исследовательскую работу в рамках ``обещающей'' модели.
 
-\hline
-\multicolumn{10}{|c|}{Write Reorder (\textsf{WR})\ifext{, \S\ref{app:wr}}{}} \\
-\hline
-\textsf{rlx}      & \tick & &       & & \tick & & & & \tick\\ 
-\textsf{rlx+rel}  & \tick & &       & & \tick & \tick & & & \tick\\ 
-\textsf{rel}      & \tick & &       & & \tick & \tick & & & \tick\\ 
+%% {
+%% %% \setlength{\belowcaptionskip}{-20pt} 
+%% \begin{figure}[h!]
+%% \centering
+%% {\scriptsize
+%% %% \begin{tabular}{| l ||@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}||@{~}c@{~}|}
+%% \begin{tabular}{| l ||@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}|@{~}c@{~}||@{~}c@{~}|}
+%%   \hline
+%%   \textbf{Название теста} & \textsf{VF} & \textsf{WF} & \textsf{SCF}
+%%   & \textsf{NAF} & \textsf{PO} & \textsf{ARR} % & \textsf{VS}
+%%   & \textsf{CR} & \textsf{JN} & \textbf{C11} \\
+%% %
+%% % \textbf{Test name} & History & Viewfronts & Write-fronts & SC-front
+%% %           & NA-front & Postponed operations & Acquire Read Restrictions (& Value Stealing) & Consume & Joining threads w/ non-empty operation buffers & \textbf{Full Support} \\
+
+%% \hline\hline
+%% \multicolumn{10}{|c|}{Store Buffering (\textsf{SB})\ifext{, \S\ref{app:sb}}{}} \\
+%% \hline
+%% \textsf{rel+acq}   & \tick & &       & & & & & & \tick\\ 
+%% \textsf{sc}        & \tick & & \tick & & & & & & \tick\\ 
+%% \textsf{sc+rel}    & \tick & & \tick & & & & & & \tick\\ 
+%% \textsf{sc+acq}    & \tick & & \tick & & & & & & \tick\\ 
 
 %% \hline
-%% \multicolumn{11}{|c|}{Value Stealing (\textsf{VS})\ifext{, \S\ref{app:ss}}{}} \\
+%% \multicolumn{10}{|c|}{Load Buffering (\textsf{LB})\ifext{, \S\ref{app:lb}}{}} \\
 %% \hline
-%% \textsf{rlx}      & \tick & &       & & \tick & \tick & \tick & & & \tick\\ 
+%% \textsf{rlx}         & \tick & & & & \tick & & & & \tick\\ 
+%% \textsf{rel+rlx}     & \tick & & & & \tick & & & & \tick\\ 
+%% \textsf{acq+rlx}     & \tick & & & & \tick & & & & \fail\\ 
+%% \textsf{rel+acq+rlx} & \tick & & & & \tick & \tick & & & \tick\\ 
+%% \textsf{rlx+use}     & \tick & & & & \tick & & & & \tick\\ 
+%% \textsf{rlx+let}     & \tick & & & & \tick & & & & \tick\\ 
+%% \textsf{rlx+join}    & \tick & & & & \tick & & & \tick & \tickP\\ 
+%% \textsf{rel+rlx+join} & \tick & & & & \tick & & & \tick & \tickP\\ 
+%% \textsf{acq+rlx+join} & \tick & & & & \tick & & & \tick & \fail\\ 
 
-\hline
-\multicolumn{10}{|c|}{Speculative Execution (\textsf{SE})\ifext{, \S\ref{app:se}}{}} \\
-\hline
-\textsf{simple}      & \tick & &       & & \tick & & & & \tick\\ 
-\textsf{prop}        & \tick & &       & & \tick & & & & \tick\\ 
-\textsf{nested}      & \tick & &       & & \tick & & & & \tick\\ 
+%% \hline
+%% \multicolumn{10}{|c|}{Message passing (\textsf{MP})\ifext{, \S\ref{app:mp}}{}} \\
+%% \hline
+%% \textsf{rlx+na}            & \tick &       & & \tick & & &       & & \tick\\ 
+%% \textsf{rel+rlx+na}        & \tick &       & & \tick & & &       & & \tick\\ 
+%% \textsf{rlx+acq+na}        & \tick &       & & \tick & & &       & & \tick\\ 
+%% \textsf{rel+acq+na}        & \tick &       & & \tick & & \tick & & & \tick\\ 
+%% \textsf{rel+acq+na+rlx(\_2)} & \tick & \tick & & \tick & & \tick & & & \tick\\ 
+%% \textsf{con+na(\_2)}       & \tick &       & & \tick & & & \tick & & \tick\\ 
+%% \textsf{cas+rel+acq+na}    & \tick &       & & \tick & & \tick & & & \tick\\ 
+%% \textsf{cas+rel+rlx+na}    & \tick &       & & \tick & & &     & & \tick\\ 
 
-  \hline
-  \multicolumn{10}{|c|}{Locks\ifext{, \S\ref{app:locks}}{}} \\
-  \hline
-  Dekker & \tick & & & \tick & & & & & \tick\\ 
-  Cohen~\cite{Turon-al:OOPSLA14}  & \tick & & & \tick & & & & & \tick\\ 
+%% \hline
+%% \multicolumn{10}{|c|}{Coherence of Read-Read (\textsf{CoRR})\ifext{, \S\ref{app:corr}}{}} \\
+%% \hline
+%% \textsf{rlx}      & \tick & &       & & &  & & & \tick\\ 
+%% \textsf{rel+acq}  & \tick & &       & & &  & & & \tick\\ 
 
-%% LB & $\checkmark$ & & \\
-%% \multicolumn{4}{l}{ A snippet code here
-%% }\\
-%% SB & $\checkmark$ & & \\
+%% \hline
+%% \multicolumn{10}{|c|}{Independent Reads of Independent Writes (\textsf{IRIW})\ifext{, \S\ref{app:iriw}}{}} \\
+%% \hline
+%% \textsf{rlx}      & \tick & &       & & &  & & & \tick\\ 
+%% \textsf{rel+acq}  & \tick & &       & & &  & & & \tick\\ 
+%% \textsf{sc}       & \tick & & \tick & & &  & & & \tick\\ 
 
-\hline
+%% \hline
+%% \multicolumn{10}{|c|}{Write-to-Read Causality (\textsf{WRC})\ifext{, \S\ref{app:wrc}}{}} \\
+%% \hline
+%% \textsf{rlx}      & \tick & &       & & & &  & & \tick\\ 
+%% \textsf{rel+acq}  & \tick & &       & & & &  & & \tick\\ 
+%% \textsf{cas+rel}  & \tick & &       & & & \tick & & & \tick\\ 
+%% \textsf{cas+rlx}  & \tick & &       & & & &  & & \tick\\ 
 
-\end{tabular}
-}
-\caption{Litmus tests
-  \ifext{(Appendix~\ref{sec:litmusTests})}{} and corresponding
-  semantic aspects of our framework:
-  {viewfronts}~(\textsf{VF},~\S\ref{sec:hist}),
-  {write-fronts}~(\textsf{WF},~\S\ref{sec:wrf}),
-  SC-fronts~(\textsf{SCF},~\S\ref{sec:sc}), {non-atomic
-    fronts}~(\textsf{NAF},~\S\ref{sec:na}), {postponed
-    operations}~(\textsf{PO},~\S\ref{sec:postponed-sem}),
-  {acquire read restrictions}),
-    %($\stGamma$)}~(\textsf{ARR},~\S\ref{sec:postponed-sem}),
-  %% {value stealing}~(\textsf{VS},~\S\ref{sec:postponed-sem}),
-  %% {if speculations}~(\textsf{IS}),
-  {consume-reads}~(\textsf{CR}), {joining threads with non-empty
-    operation buffers}~(\textsf{JN},~\S\ref{sec:join}).  The column
-  \textbf{C11} indicates whether the behavior is coherent with the C11
-  standard.  }
-\label{fig:litmusTbl}
-\end{figure}
-}
+%% \hline
+%% \multicolumn{10}{|c|}{Out-of-Thin-Air (\textsf{OTA})\ifext{, \S\ref{app:ota}}{}} \\
+%% \hline
+%% \textsf{lb}       & \tick & &       & & \tick & & & & \fail\\ 
+%% \textsf{if}       & \tick & &       & & \tick & & & & \fail\\ 
 
+%% \hline
+%% \multicolumn{10}{|c|}{Write Reorder (\textsf{WR})\ifext{, \S\ref{app:wr}}{}} \\
+%% \hline
+%% \textsf{rlx}      & \tick & &       & & \tick & & & & \tick\\ 
+%% \textsf{rlx+rel}  & \tick & &       & & \tick & \tick & & & \tick\\ 
+%% \textsf{rel}      & \tick & &       & & \tick & \tick & & & \tick\\ 
 
-В \underline{\textbf{третьей главе}} приводится описание интерпретатора операционного варианта модели памяти для C/C++.
-Интерпретатор реализован на языке Racket, который является диалектом Lisp, с помощью библиотеки описания операционных
-семантик PLT/Redex.
+%% %% \hline
+%% %% \multicolumn{11}{|c|}{Value Stealing (\textsf{VS})\ifext{, \S\ref{app:ss}}{}} \\
+%% %% \hline
+%% %% \textsf{rlx}      & \tick & &       & & \tick & \tick & \tick & & & \tick\\ 
 
-В \underline{\textbf{четвертой главе}} приводится описание ``обещающей'' модели памяти.
+%% \hline
+%% \multicolumn{10}{|c|}{Speculative Execution (\textsf{SE})\ifext{, \S\ref{app:se}}{}} \\
+%% \hline
+%% \textsf{simple}      & \tick & &       & & \tick & & & & \tick\\ 
+%% \textsf{prop}        & \tick & &       & & \tick & & & & \tick\\ 
+%% \textsf{nested}      & \tick & &       & & \tick & & & & \tick\\ 
 
-В \underline{\textbf{пятой главе}} приводится описание операционной модели ARMv8 POP и для неё
+%%   \hline
+%%   \multicolumn{10}{|c|}{Locks\ifext{, \S\ref{app:locks}}{}} \\
+%%   \hline
+%%   Dekker & \tick & & & \tick & & & & & \tick\\ 
+%%   Cohen~\cite{Turon-al:OOPSLA14}  & \tick & & & \tick & & & & & \tick\\ 
+
+%% %% LB & $\checkmark$ & & \\
+%% %% \multicolumn{4}{l}{ A snippet code here
+%% %% }\\
+%% %% SB & $\checkmark$ & & \\
+
+%% \hline
+
+%% \end{tabular}
+%% }
+%% \caption{Litmus tests
+%%   \ifext{(Appendix~\ref{sec:litmusTests})}{} and corresponding
+%%   semantic aspects of our framework:
+%%   {viewfronts}~(\textsf{VF},~\S\ref{sec:hist}),
+%%   {write-fronts}~(\textsf{WF},~\S\ref{sec:wrf}),
+%%   SC-fronts~(\textsf{SCF},~\S\ref{sec:sc}), {non-atomic
+%%     fronts}~(\textsf{NAF},~\S\ref{sec:na}), {postponed
+%%     operations}~(\textsf{PO},~\S\ref{sec:postponed-sem}),
+%%   {acquire read restrictions}),
+%%     %($\stGamma$)}~(\textsf{ARR},~\S\ref{sec:postponed-sem}),
+%%   %% {value stealing}~(\textsf{VS},~\S\ref{sec:postponed-sem}),
+%%   %% {if speculations}~(\textsf{IS}),
+%%   {consume-reads}~(\textsf{CR}), {joining threads with non-empty
+%%     operation buffers}~(\textsf{JN},~\S\ref{sec:join}).  The column
+%%   \textbf{C11} indicates whether the behavior is coherent with the C11
+%%   standard.  }
+%% \label{fig:litmusTbl}
+%% \end{figure}
+%% }
+
+В \underline{\textbf{третьей главе}} приводится описание ``обещающей'' модели памяти и приводится
+описание существующих научных задач, связанных с ней.
+
+``Обещающая'' модель памяти это операционная модель памяти для синтаксиса модели C/C++11.
+Она использует те же базовые понятия, что и предложенная диссертантом модель $\OpCpp$,
+метки времени и фронты, однако вместо механизма откладывания выполнения инструкций ``обещающая'' модель,
+в соответствии с её названием, использует механизм \emph{обещаний}. Так, в каждый момент исполнения поток
+``обещающей'' модели памяти может выполнить одно из двух действий: либо выполнить следующую инструкцию,
+либо пообещать сделать запись в локацию. Последнее может быть выполнено вне зависимости от того, какая
+инструкция следующая к выполнению в коде потока.
+Если поток выбирает пообещать сделать запись в локацию, то он добавляет соответствующее сообщение в память,
+делая это сообщение видимым для других потоков. Далее в ходе исполнения поток должен будет выполнить некоторую
+соответствующую инструкцию записи, таким образом выполняя ранее сделанное обещание.
+
+Для того, чтобы запретить значения из воздуха, после каждого шага исполнения каждый поток должен выполнить
+т.н. \emph{сертификацию} --- предъявить, что он (поток) может быть локально исполнен таким образом, что
+он выполнит все оставшиеся обещания. К сожалению, сертификация алгоритмически не разрешима, если
+язык, для которого определена ``обещающая'' модель, является полным по Тьюрингу. Как следствие, для
+этой модели невозможно разработать интепретатор, что является её недостатком по сравнению с представленной в
+диссертации модели $\OpCpp$.
+
+Несмотря на этот недостаток, ``обещающая'' модель обладает рядом существенных достоинств.
+В частности, ``обещающая'' модель не имеет проблемы значений из воздуха, что делает возможным разработку
+выразительной программной логики для неё. Также для модели была доказана корректность существенного класса компиляторных
+оптимизаций, а также корректность эффективной компиляции в модели памяти x86 и Power.
+
+Открытой проблемой является доказательство корректности компиляции из ``обещающей'' модели памяти в модели памяти архитектуры
+ARM, которая, наравне с x86 и Power, является одной из наиболее распространённых процессорных архитектур на данный момент.
+Этой задаче и посвящены последующие главы диссертации.
+
+В \underline{\textbf{четвертой главе}} приводится описание операционной модели ARMv8 POP и для неё
 приводится доказательство корректности компиляции из ``обещающей'' модели памяти.
+
+Здесь и далее под корректностью компиляции мы понимаем следующее утверждение.\\
+\textbf{Определение.} Для языков $L$ и $L'$ с моделями памяти $M$ и $M'$ соответственно схема компиляции $\textsf{compile} : L \rightarrow L'$
+называется \emph{корректной} если выполняется следующее:
+\[ \forall Prog \in L. \; \sembr{\textsf{compile}(Prog)}_{M'} \subseteq \sembr{Prog}_{M}, \]
+где $\sembr{Prog}_{M}$ --- множество исполнений программы $Prog$ в модели памяти $M$.
+
+Модель памяти ARMv8 POP --- операционная модель памяти для архитектуры ARMv8.0, предложенная в 2016 г.
+Данная модель определена в терминах, достаточно близких к физической реализации архитектуры ARM.
+Абстрактная машина, которая реализует модель ARMv8 POP, состоит из двух компонент: подсистем памяти и управления.
+
+Подсистема памяти является иерархической структурой \emph{буферов}, каждый из которых является списком запросов к подсистеме.
+Запросом, при этом, может быть чтение из локации, запись в локацию или барьер памяти.
+Идейно подсистема памяти похожа на иерархическую систему кэшей, используемую в современных процессорах.
+Так, подсистема управления может послать запрос в подсистему хранения. Сначала запрос попадает в буфер, который локален
+для соответствующего потока, потом он может быть передан следующему в иерархии буферу, который уже общий для некоторого
+набора процессоров, и так далее, пока запрос не попадёт в основную память или, если это запрос на чтение, не будет
+удовлетворён из сообщения .
+
+Подсистема управления выполняет программу для каждого потока. Она имеет возможность выполнять инструкции не по порядку.
+
+
 Доказательство основано на специальной версии симуляции --- \emph{запаздывающей} симуляции.
 
-В \underline{\textbf{шестой главе}} обсуждается аксиоматическая модель памяти ARMv8.3.
+В \underline{\textbf{пятой главе}} обсуждается аксиоматическая модель памяти ARMv8.3.
 Приводятся рассуждения о том, почему
 метод доказательства корректности компиляции из ``обещающей'' модели памяти, использованный её авторами для случая
 аксиоматических моделей архитектур x86 и Power, не подходит для модели ARMv8.3.
 Обсуждается структура доказательства корректности компиляции. Доказательство основано на симуляции ``обещающей'' моделью
 памяти операционной семантики обхода исполнения программ в модели ARMv8.3.
 
-В \underline{\textbf{седьмой главе}} приводится семантика обхода исполнений программ в модели ARMv8.3. Доказывается
+В \underline{\textbf{шестой главе}} приводится семантика обхода исполнений программ в модели ARMv8.3. Доказывается
 полнота данного обхода.
 
 В \underline{\textbf{заключении}} приведены основные результаты работы, которые заключаются в следующем:
