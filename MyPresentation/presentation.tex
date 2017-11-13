@@ -28,8 +28,10 @@
 \usepackage{tikz}
 \usetikzlibrary{positioning}
 \usetikzlibrary{fadings,decorations.pathmorphing,decorations.pathreplacing}
+\usetikzlibrary{shapes}
 \usetikzlibrary{shapes.multipart,matrix,calc}
 \usetikzlibrary{arrows}
+\usetikzlibrary{patterns}
 \usetikzlibrary{shapes.callouts} 
 \usetikzlibrary{shadows,calc}
 \usepackage{wrapfig}
@@ -419,6 +421,83 @@ at #5 {#7};
 \tikzset{round right paren/.style={ncbar=0.5cm,out=60,in=-60}}
 
 \begin{document}
+
+%% Custom TikZ patterns
+    \pgfdeclarepatternformonly{swnestripes}{\pgfpoint{0cm}{0cm}}{\pgfpoint{1cm}{1cm}}{\pgfpoint{1cm}{1cm}}
+    {
+        \foreach \i in {0.1cm, 0.3cm,...,0.9cm}
+        {
+         \pgfpathmoveto{\pgfpoint{\i}{0cm}}
+         \pgfpathlineto{\pgfpoint{1cm}{1cm - \i}}
+         \pgfpathlineto{\pgfpoint{1cm}{1cm - \i + 0.1cm}}
+         \pgfpathlineto{\pgfpoint{\i - 0.1cm}{0cm}}
+         \pgfpathclose%
+         \pgfusepath{fill}
+         \pgfpathmoveto{\pgfpoint{0cm}{\i}}
+         \pgfpathlineto{\pgfpoint{1cm - \i}{1cm}}
+         \pgfpathlineto{\pgfpoint{1cm - \i - 0.1cm}{1cm}}
+         \pgfpathlineto{\pgfpoint{0cm}{\i + 0.1cm}}
+         \pgfpathclose%
+         \pgfusepath{fill}
+        }
+    }
+    %% \pgfdeclarepatternformonly{swneStripes}{\pgfpoint{0cm}{0cm}}{\pgfpoint{1cm}{1cm}}{\pgfpoint{1cm}{1cm}}
+    %% {
+    %%     \foreach \i in {0.1cm, 0.3cm,...,0.9cm}
+    %%     {
+    %%      \pgfpathmoveto{\pgfpoint{\i}{0cm}}
+    %%      \pgfpathlineto{\pgfpoint{1cm}{1cm - \i}}
+    %%      \pgfpathlineto{\pgfpoint{1cm}{1cm - \i - 0.1cm}}
+    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{0cm}}
+    %%      \pgfpathclose%
+    %%      \pgfusepath{fill}
+    %%      \pgfpathmoveto{\pgfpoint{0cm}{\i}}
+    %%      \pgfpathlineto{\pgfpoint{1cm - \i}{1cm}}
+    %%      \pgfpathlineto{\pgfpoint{1cm - \i + 0.1cm}{1cm}}
+    %%      \pgfpathlineto{\pgfpoint{0cm}{\i - 0.1cm}}
+    %%      \pgfpathclose%
+    %%      \pgfusepath{fill}
+    %%     }
+    %% }
+    %% \pgfdeclarepatternformonly{senwstripes}{\pgfpoint{0cm}{0cm}}{\pgfpoint{1cm}{1cm}}{\pgfpoint{1cm}{1cm}}
+    %% {
+    %%     \foreach \i in {0.1cm, 0.3cm,...,0.9cm}
+    %%     {
+    %%      \pgfpathmoveto{\pgfpoint{0cm}{\i}}
+    %%      \pgfpathlineto{\pgfpoint{0cm}{\i + 0.1cm}}
+    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{0cm}}
+    %%      \pgfpathlineto{\pgfpoint{\i}{0cm}}
+    %%      \pgfpathclose%
+    %%      \pgfusepath{fill}
+    %%      \pgfpathmoveto{\pgfpoint{1cm}{\i}}
+    %%      \pgfpathlineto{\pgfpoint{\i}{1cm}}
+    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{1cm}}
+    %%      \pgfpathlineto{\pgfpoint{1cm}{\i + 0.1cm}}
+    %%      \pgfpathclose%
+    %%      \pgfusepath{fill}
+    %%     }
+    %% }
+    %% \pgfdeclarepatternformonly{senwStripes}{\pgfpoint{0cm}{0cm}}{\pgfpoint{1cm}{1cm}}{\pgfpoint{1cm}{1cm}}
+    %% {
+    %%     \foreach \i in {0.0cm, 0.2cm,...,0.8cm}
+    %%     {
+    %%      \pgfpathmoveto{\pgfpoint{\i}{0cm}}
+    %%      \pgfpathlineto{\pgfpoint{0cm}{\i}}
+    %%      \pgfpathlineto{\pgfpoint{0cm}{\i + 0.1cm}}
+    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{0cm}}
+    %%      \pgfpathclose%
+    %%      \pgfusepath{fill}
+    %%      \pgfpathmoveto{\pgfpoint{1cm}{\i}}
+    %%      \pgfpathlineto{\pgfpoint{\i}{1cm}}
+    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{1cm}}
+    %%      \pgfpathlineto{\pgfpoint{1cm}{\i + 0.1cm}}
+    %%      \pgfpathclose%
+    %%      \pgfusepath{fill}
+    %%     }
+    %% }
+
+
+
 \title
 {Операционные методы в приложении к слабым моделям памяти}
 \author
@@ -581,9 +660,9 @@ at #5 {#7};
 %% \item \only<-7>{Производительный}\only<8>{{\bf ?Производительный?}}\only<9->{{\bf Оптимизирующий}} Процессор
 %% }
 
-\section{Контекст и мотивация}
+\section{Контекст, мотивация, задачи}
 \phrase{
-  {\bf Модель памяти} (МП) --- это семантика многопоточной системы\\
+  {\bf Модель памяти} (memory model, MM) --- семантика многопоточной системы\\
 }
 
 \phrase{
@@ -687,16 +766,16 @@ at #5 {#7};
   Не-SC исполнения --- {\bf слабые}
   \vfill
   \pause
-  {\bf Слабые} МП разрешают \\ слабые исполнения 
+  {\bf Слабые} MM разрешают \\ слабые исполнения 
   \vfill
   \pause
-  Реальные системы имеют слабые МП \\
+  Реальные системы имеют слабые MM \\
   \pause
   {\Large (x86, Power, ARM, C++, Java)}
 }
 
 \phrase{
-  Почему системы имеют слабые МП?
+  Почему системы имеют слабые MM?
 }
 
 \fr{\huge Процессоры и компиляторы \newline {\bf оптимизируют} программы}{
@@ -710,8 +789,8 @@ at #5 {#7};
       \item кэш
       \item буферы
       \item удаление чтения после записи 
-      \item спекулятивное исполнение
-      \item удаление антизависимости \tikzmark{fakeelim}
+      \item спекулятивное исполнение \tikzmark{fakeelim}
+      %% \item удаление антизависимости 
       \item {\Huge \dots} \tikzmark{dots}
     }
   }
@@ -861,7 +940,7 @@ at #5 {#7};
       
       \uncover<\scmmFr->{
         \node[anchor=west] at
-          ($.5*(leftFirstInst) + .5*(leftSecondInst) + (-7.0, 0.0)$) {\large Исходная модель (SC МП)};
+          ($.5*(leftFirstInst) + .5*(leftSecondInst) + (-7.0, 0.0)$) {\large Исходная модель (SC MM)};
       }
 
       \node (leftFirstInstC)   [below of= leftFirstInst, node distance = 4cm] {};
@@ -885,7 +964,7 @@ at #5 {#7};
         \draw[-,ultra thick] ($(instMiddleC) + ( 0.1,0.5)$) -- ($(instMiddleC) + ( 0.1,-0.5-1.6)$);
       }
 
-      \node<\powermmFr->[anchor=west] at ($(leftSecondInstC) + (-7.0, 0.0)$) {\large Целевая модель (Power МП)};
+      \node<\powermmFr->[anchor=west] at ($(leftSecondInstC) + (-7.0, 0.0)$) {\large Целевая модель (Power MM)};
 
       \draw<\compiledFr->[->,thick] ($(instMiddle) + (0.0,-1.5)$) -- ($(instMiddleC) + (0.0,1.0)$);
       \node<\noteffFr->[anchor=east] at ($.5*(instMiddle) + .5*(instMiddleC) + (0.0,-0.2)$)
@@ -1008,7 +1087,7 @@ at #5 {#7};
   }
 }
 
-\begin{frame}<-7>{\huge МП для языков программирования}
+\begin{frame}<-7>{\huge MM для языков программирования}
   \setorder{{firstFr},{reqFr},{appearFr},
             {notionEffImplFr, effImplFr},
             {notionComplOptFr, complOptFr},
@@ -1024,15 +1103,15 @@ at #5 {#7};
     \uncover<\effImplFr->{& {\bf ЭК}}   \uncover<\complOptFr->{& {\bf КО}}
     \uncover<\highLevelFr->{& Нет {\bf ЗВ}} \uncover<\undefBehFr->{& No {\bf UB}} \\
     %% \tabitem
-    SC МП, \cite{Lamport:TC79}
+    SC MM, \cite{Lamport:TC79}
       \uncover<\effImplFr->{& \fail}   \uncover<\complOptFr->{& \fail}
       \uncover<\highLevelFr->{& \tick} \uncover<\undefBehFr->{& \tick} \\
     %% \tabitem
-    Java МП\tikzmark{jmm}, \cite{Manson-al:POPL05} \tikzmark{java}
+    Java MM\tikzmark{jmm}, \cite{Manson-al:POPL05} \tikzmark{java}
       \uncover<\effImplFr->{& \tick}   \uncover<\complOptFr->{& \fail}
       \uncover<\highLevelFr->{& \tick} \uncover<\undefBehFr->{& \tick} \\
     %% \tabitem
-    C/C++11 МП, \cite{Batty-al:POPL11} \tikzmark{cpp}
+    C/C++11 MM, \cite{Batty-al:POPL11} \tikzmark{cpp}
       \uncover<\effImplFr->{& \tick}   \uncover<\complOptFr->{& \tick$^{*}$}
       \uncover<\highLevelFr->{& \fail\tikzmark{ootaCppMark}} \uncover<\undefBehFr->{& \fail} \\
     \\
@@ -1074,9 +1153,9 @@ at #5 {#7};
  %%  }
 \end{frame}
 
-\phrase{C/C++11 МП --- {\bf аксиоматическая} МП}
+\phrase{C/C++11 MM --- {\bf аксиоматическая} MM}
 
-\fr{\huge Исполнения в C/C++11 МП}{
+\fr{\huge Исполнения в C/C++11 MM}{
   \setorder{{firstFr}, {lbHighlightFr}, {bigLBFr}, {axiomsFr}, {removeValueFr}, {randomValueFr}}
   \prevFr{\befBigLBFr}{\bigLBFr}
   \prevFr{\befRemoveValueFr}{\removeValueFr}
@@ -1224,15 +1303,15 @@ at #5 {#7};
 \fr{\huge Постановка задачи}{
 \Large
 \begin{block}{Проблема}
-  Не существует МП промышленного ЯП, удовлетворяющей основным критериям
+  Не существует MM промышленного ЯП, удовлетворяющей основным критериям
 \end{block}
 \pause
 \begin{block}{Цель}
-  Разработать операционный аналог C/C++11 МП без значений из воздуха, \\ удовлетворяющий основным критериям
+  Разработать операционный аналог C/C++11 MM без значений из воздуха, \\ удовлетворяющий основным критериям
 \end{block}
 }
 
-\section{Результаты}
+\section{Описание результатов}
 
 \begin{frame}<-8>[label=resultsFrame]{\huge Результаты}
   \setorder{{firstFr},{opCppFr,interpreterFr},
@@ -1262,7 +1341,7 @@ at #5 {#7};
         \uncover<\promisePropertiesFr->{
           \begin{itemize}
             \item Операционная
-            \item Доказана корректность компиляции в МП x86 и Power
+            \item Доказана корректность компиляции в MM x86 и Power
             \item Разрешает оптимизации
             \item Не имеет значений из воздуха
             \uncover<\promisePerspectiveFr->{
@@ -1270,7 +1349,7 @@ at #5 {#7};
             }
             \uncover<\promiseARMHoleFr->{
               \vfill 
-              \item \alert{Нету д-ва корректности компиляции в МП ARM}!
+              \item \alert{Нет д-ва корректности компиляции в MM ARM}!
             }
           \end{itemize}
         }
@@ -1282,7 +1361,7 @@ at #5 {#7};
         \toShadow
           {-\befOpCppSectionFr,\armPOPSectionFr,\nextArmAxSectionFr-}
           {\opCppSectionFr,\armAxSectionFr}
-        {Доказана корректность компиляции из подмножества\tikzmark{subset} ``обещающей'' модели (ККОМ) в операционную \ARMpop}
+        {Доказана корректность компиляции из существенного подмножества\tikzmark{subset} ``обещающей'' модели (ККОМ) в операционную \ARMpop}
     }
     \vfill
     \uncover<\compilationAxFr->{
@@ -1455,8 +1534,8 @@ at #5 {#7};
   \mycallout<1>{green}{(proglang)}{(0.0cm, 1.0cm)}{Исходный язык}
   \mycallout<2>{green}{(hardlang)}{(0.0cm, 1.0cm)}{Целевой язык}
 
-  \mycallout<4>{green}{(progsem)}{(0.0cm, 1.0cm)}{Исходная МП}
-  \mycallout<5>{green}{(hardsem)}{(0.0cm, 1.0cm)}{Целевая МП}
+  \mycallout<4>{green}{(progsem)}{(0.0cm, 1.0cm)}{Исходная MM}
+  \mycallout<5>{green}{(hardsem)}{(0.0cm, 1.0cm)}{Целевая MM}
 }
 
 \fr{\Large Исполнение в обещающей модели (\Promise)}{
@@ -1700,7 +1779,7 @@ at #5 {#7};
   \begin{enumerate}
   \item В $\Promise$ только запись исполняется не по порядку  \\
   \vfill
-  \item В $\ARMpop$ нету порядка над записями в одну локацию 
+  \item В $\ARMpop$ нет порядка над записями в одну локацию 
   \end{enumerate}
   }
 }
@@ -1923,8 +2002,8 @@ at #5 {#7};
   \dimalert<\alertFr>{Будем определять порядок заранее!}
 }
 
-\fr{\huge Общая структура д-ва из $\Promise$ в \ARMpop}{
-  \LARGE
+\fr{\LARGE Структура д-ва из $\Promise$ в \ARMpop}{
+  \Large
   \iteN{
     \item Вводим промежуточную $\ARMt$
     \vfill
@@ -1937,8 +2016,10 @@ at #5 {#7};
 \againframe<11>{resultsFrame}
 
 \begin{frame}<-2>[label=armAxFrame]{\huge \only<-2>{Исполнение в \ARMax}\only<3->{Обход \ARMax-исполнения}}
-  \setorder{{firstFr}, {bigLBFr}, {titleTraverseFr}, {initEventsFr}}
+  \setorder{{firstFr},{bigLBFr},{titleTraverseFr},{legendFr}}
+  %% , {initEventsFr}
   \prevFr{\befBigLBFr}{\bigLBFr}
+  \prevFr{\befTitleTraverseFr}{\titleTraverseFr}
 
   \cntrd{
     \vspace{-1.5cm}
@@ -1979,8 +2060,11 @@ at #5 {#7};
       \draw[-,thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
       \draw[-,thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
       
+  \only<-\befTitleTraverseFr>{ \node (bigLBpos) at ($(ptrRight) + (0.0, -1.0)$)  {}; }
+  \only<\titleTraverseFr->   { \node (bigLBpos) at ($(ptrRight) + (-2.0, -1.0)$) {}; }
+      
   \uncover<\bigLBFr->{
-  \node at ($(ptrRight) + (0.0, -1.0)$) {
+  \node at (bigLBpos) {
     \begin{tikzpicture}[scale=2.0,every node/.style={transform shape}]
   \node (dGraphCenter) at ($(0.0, 0.0)$) {};
   
@@ -1989,15 +2073,15 @@ at #5 {#7};
     \node (d11) at ($(d1)  + (1,  0)$)  {$\rlab{}{y}{1}$ };
     \node (d12) at ($(d11) + (0, -1)$)  {$\wlab{}{x}{1}$ };
 
-    \uncover<\initEventsFr->{
-      \node (di1) at ($(d1)  + (0, 1)$)  {$\wlab{}{x}{0}$ };
-      \node (di2) at ($(d11) + (0, 1)$)  {$\wlab{}{y}{0}$ };
+    %% \uncover<\initEventsFr->{
+    %%   \node (di1) at ($(d1)  + (0, 1)$)  {$\wlab{}{x}{0}$ };
+    %%   \node (di2) at ($(d11) + (0, 1)$)  {$\wlab{}{y}{0}$ };
 
-      \draw[po, ultra thick] (di1)  edge node {} (d1);  % {\small $\lPO$} (d1);
-      \draw[po, ultra thick] (di1)  edge node {} (d11); % {\small $\lPO$} (d11);
-      \draw[po, ultra thick] (di2)  edge node {} (d1);  % {\small $\lPO$} (d1);
-      \draw[po, ultra thick] (di2)  edge node {} (d11); % {\small $\lPO$} (d11);
-    }
+    %%   \draw[po, ultra thick] (di1)  edge node {} (d1);  % {\small $\lPO$} (d1);
+    %%   \draw[po, ultra thick] (di1)  edge node {} (d11); % {\small $\lPO$} (d11);
+    %%   \draw[po, ultra thick] (di2)  edge node {} (d1);  % {\small $\lPO$} (d1);
+    %%   \draw[po, ultra thick] (di2)  edge node {} (d11); % {\small $\lPO$} (d11);
+    %% }
 
   \draw[po, ultra thick] (d1)  edge node  {} (d2);  % {\small $\lPO$} (d2);
   \draw[po, ultra thick] (d11) edge node {} (d12); % {\small $\lPO$} (d12);
@@ -2005,6 +2089,24 @@ at #5 {#7};
   \draw[rf, ultra thick] (d12) edge node {} (d1);
     \end{tikzpicture}
     };
+  }
+
+  \only<\titleTraverseFr->{
+    \uncover<\legendFr->{
+      \node (covLegend) at ($(ptrRight) + (3.0, 0.0)$) {};
+      \node (covEllL)   at ($(covLegend) + (-1.5,-0.5)$) {};
+      \node (covEllR)   at ($(covLegend) + (1.5,0.5)$) {};
+
+      \node (issLegend) at ($(ptrRight) + (3.0, -1.5)$) {};
+      \node (issEllL)   at ($(issLegend) + (-1.5,-0.5)$) {};
+      \node (issEllR)   at ($(issLegend) + (1.5,0.5)$) {};
+  
+      \draw[pattern=swnestripes, pattern color=magenta!30] (covEllL) rectangle (covEllR);
+      \node at (covLegend) {\Large Покрытые};
+
+      \draw[pattern=north east lines, pattern color=magenta!30] (issEllL) rectangle (issEllR);
+      \node at (issLegend) {\Large Выпущенные};
+    }
   }
     
     \end{tikzpicture}
@@ -2015,8 +2117,8 @@ at #5 {#7};
 
 \againframe<3->{armAxFrame}
 
-\fr{\huge Общая структура д-ва из $\Promise$ в \ARMax}{
-  \LARGE
+\fr{\LARGE Структура д-ва из $\Promise$ в \ARMax}{
+  \Large
   \iteN{
     \item Вводим обход \ARMax-исполнения
     \vfill
