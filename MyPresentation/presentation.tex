@@ -1935,8 +1935,96 @@ at #5 {#7};
 }
 
 \againframe<11>{resultsFrame}
-\fr{\ARMax}{}
-\fr{Обход графа}{}
+
+\begin{frame}<-2>[label=armAxFrame]{\huge \only<-2>{Исполнение в \ARMax}\only<3->{Обход \ARMax-исполнения}}
+  \setorder{{firstFr}, {bigLBFr}, {titleTraverseFr}, {initEventsFr}}
+  \prevFr{\befBigLBFr}{\bigLBFr}
+
+  \cntrd{
+    \vspace{-1.5cm}
+    \begin{tikzpicture}[every node/.style={transform shape}]
+      \node (leftFirstInst)   {};
+      \node (leftSecondInst)  [below of= leftFirstInst, node distance = 0.8cm] {};
+      \node (rightFirstInst)  [right of= leftFirstInst, node distance = 3.0cm] {};
+      \node (rightSecondInst) [below of=rightFirstInst, node distance = 0.8cm] {};
+
+      \node (instMiddle)   at ($.5*(leftFirstInst) + .5*(rightFirstInst)$) {};
+      \node (leftBuffer)   at (leftSecondInst)  {};
+      \node (rightBuffer)  at (rightSecondInst) {};
+      \node (middleBuffer) at ($.5*(leftBuffer) + .5*(rightBuffer)$) {};
+      \node (finalValues)  at ($(middleBuffer) + (0, -4.5)$) {};
+      
+      %% \node (ptrLeft)  at ($.5*(rightFirstInst) + .5*(rightSecondInst) + (1.5, 0)$) {};
+      %% \node (ptrRight) at ($(ptrLeft) + (1.0, 0)$) {};
+      \node (ptrLeft)  at ($(instMiddle) + (0.0, -1.7)$) {};
+      \node (ptrRight) at ($(ptrLeft) + (0.0, -1.5)$) {};
+
+      %% \node (leftCurlyCenter)  at ($(ptrRight) + (1.0, 0)$) {};
+      \node (leftCurlyCenter)  at ($(leftSecondInst) +  (-3.25, -4.0)$) {};
+      \node (rightCurlyCenter) at ($(rightSecondInst) + ( 3.25, -4.0)$) {};
+      
+      \node (curlyTopShift) at (0, -1.5) {};
+      \node (curlyBotShift) at (0,  1.5) {};
+      \node (leftCurlyTop)  at ($(leftCurlyCenter)  + (curlyTopShift)$) {};
+      \node (rightCurlyTop) at ($(rightCurlyCenter) + (curlyTopShift)$) {};
+
+      \node (leftCurlyBot)  at ($(leftCurlyCenter)  + (curlyBotShift)$) {};
+      \node (rightCurlyBot) at ($(rightCurlyCenter) + (curlyBotShift)$) {};
+      
+      \node at (leftFirstInst)   {\Large $\readInst{a}{x};$};
+      \node at (leftSecondInst)  {\Large $\writeInst{y}{1};$};
+      \node at (rightFirstInst)  {\Large $\readInst{b}{y};$};
+      \node at (rightSecondInst) {\Large $\writeInst{x}{1};$};
+
+      \draw[-,thick] ($(instMiddle) + (-0.1,0.5)$) -- ($(instMiddle) + (-0.1,-0.5-0.8)$);
+      \draw[-,thick] ($(instMiddle) + ( 0.1,0.5)$) -- ($(instMiddle) + ( 0.1,-0.5-0.8)$);
+      
+  \uncover<\bigLBFr->{
+  \node at ($(ptrRight) + (0.0, -1.0)$) {
+    \begin{tikzpicture}[scale=2.0,every node/.style={transform shape}]
+  \node (dGraphCenter) at ($(0.0, 0.0)$) {};
+  
+    \node (d1)  at ($(dGraphCenter) + (-0.5, 0.5)$) {$\rlab{}{x}{1}$ };
+    \node (d2)  at ($(d1)  + (0, -1)$)  {$\wlab{}{y}{1}$ };
+    \node (d11) at ($(d1)  + (1,  0)$)  {$\rlab{}{y}{1}$ };
+    \node (d12) at ($(d11) + (0, -1)$)  {$\wlab{}{x}{1}$ };
+
+    \uncover<\initEventsFr->{
+      \node (di1) at ($(d1)  + (0, 1)$)  {$\wlab{}{x}{0}$ };
+      \node (di2) at ($(d11) + (0, 1)$)  {$\wlab{}{y}{0}$ };
+
+      \draw[po, ultra thick] (di1)  edge node {} (d1);  % {\small $\lPO$} (d1);
+      \draw[po, ultra thick] (di1)  edge node {} (d11); % {\small $\lPO$} (d11);
+      \draw[po, ultra thick] (di2)  edge node {} (d1);  % {\small $\lPO$} (d1);
+      \draw[po, ultra thick] (di2)  edge node {} (d11); % {\small $\lPO$} (d11);
+    }
+
+  \draw[po, ultra thick] (d1)  edge node  {} (d2);  % {\small $\lPO$} (d2);
+  \draw[po, ultra thick] (d11) edge node {} (d12); % {\small $\lPO$} (d12);
+  \draw[rf, ultra thick] (d2)  edge node {} (d11); % {\small $\lRF$} (d11);
+  \draw[rf, ultra thick] (d12) edge node {} (d1);
+    \end{tikzpicture}
+    };
+  }
+    
+    \end{tikzpicture}
+  }
+\end{frame}
+
+\phrase{Как по графу построить исполнение \Promise? \\ \pause Нужен обход!}
+
+\againframe<3->{armAxFrame}
+
+\fr{\huge Общая структура д-ва из $\Promise$ в \ARMax}{
+  \LARGE
+  \iteN{
+    \item Вводим обход \ARMax-исполнения
+    \vfill
+    \item Доказываем полноту обхода
+    \vfill
+    \item Показываем симуляцию для $\Promise$ и обхода 
+  }
+}
 
 \section{Итоги}
 
@@ -1971,7 +2059,7 @@ at #5 {#7};
 
 \fri{\huge Планы на будущее}{
   \LARGE
-  \item Компиляция из всей обещающей машины в \ARMax и Power в Coq
+  \item Компиляция из всей обещающей машины в $\ARMax$ и Power в Coq
   \vfill
   \item Логика для программ в обещающей машине
 }
