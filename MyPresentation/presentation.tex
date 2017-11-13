@@ -343,6 +343,8 @@ at #5 {#7};
 \colorlet{colorPROM}{darkGreen}
 \colorlet{colorPOSTPONE}{magenta!80!black}
 \colorlet{colorSHADE}{gray!70}
+\colorlet{colorCOV}{magenta!20}
+\colorlet{colorISS}{green!30!white}
 
 \colorlet{colorPO}{gray!60!black}
 \colorlet{colorRF}{green!60!black}
@@ -496,8 +498,6 @@ at #5 {#7};
     %%     }
     %% }
 
-
-
 \title
 {Операционные методы в приложении к слабым моделям памяти}
 \author
@@ -509,7 +509,8 @@ at #5 {#7};
 \end{tabular}
 
 \vspace{2cm}
-Семинар ИСП РАН
+Кафедра Системного Программирования, МатМех, СПбГУ
+%% Семинар ИСП РАН
 }
 \date[16-11-17]{16.11.2017}
 
@@ -643,6 +644,14 @@ at #5 {#7};
     \node[anchor=west] at ($(#1) + (1.4, 0.0)$) {\Large \textcolor{colorPROM}{\promisedTXT}};
 }
 
+\newcommand{\traverseSingleBorder}[2]{
+    \draw[pattern=swnestripes, pattern color=#1, thick, rounded corners] ($(#2)  + (-0.35,-0.3)$) rectangle ++(0.7,0.6);
+}
+
+\newcommand{\traverseTwoVertBorder}[3]{
+    \draw[pattern=swnestripes, pattern color=#1, thick, rounded corners] ($(#2)  + (-0.45,0.4)$) rectangle ($(#3)  + (0.45,-0.4)$);
+}
+
 {\setbeamertemplate{footline}{}\setbeamertemplate{headline}{}\frame[plain,noframenumbering]{\titlepage}}
 %% \begin{frame}[plain,noframenumbering]
 %%   \titlepage
@@ -662,7 +671,7 @@ at #5 {#7};
 
 \section{Контекст, мотивация, задачи}
 \phrase{
-  {\bf Модель памяти} (memory model, MM) --- семантика многопоточной системы\\
+  {\bf Модель памяти} \\ (memory model, MM) --- семантика многопоточной системы\\
 }
 
 \phrase{
@@ -2015,11 +2024,21 @@ at #5 {#7};
 
 \againframe<11>{resultsFrame}
 
-\begin{frame}<-2>[label=armAxFrame]{\huge \only<-2>{Исполнение в \ARMax}\only<3->{Обход \ARMax-исполнения}}
-  \setorder{{firstFr},{bigLBFr},{titleTraverseFr},{legendFr}}
+\begin{frame}<-2>[label=armAxFrame]{\huge \only<-2>{Исполнение в \ARMax}\only<3->{Обход \ARMax}}
+  \setorder{{firstFr},{bigLBFr},{titleTraverseFr},{legendFr},
+            {issueLeftFr},
+            {coverReadRightFr},{issueRightFr},{coverWriteRightFr},
+            {coverReadLeftFr},{coverWriteLeftFr}}
   %% , {initEventsFr}
   \prevFr{\befBigLBFr}{\bigLBFr}
   \prevFr{\befTitleTraverseFr}{\titleTraverseFr}
+  \prevFr{\befIssueLeftFr}{\issueLeftFr}
+  \prevFr{\befCoverReadRightFr}{\coverReadRightFr}
+  \prevFr{\befIssueRightFr}{\issueRightFr}
+  \prevFr{\befCoverWriteRightFr}{\coverWriteRightFr}
+  \prevFr{\befCoverReadLeftFr}{\coverReadLeftFr}
+  \prevFr{\befCoverWriteLeftFr}{\coverWriteLeftFr}
+
 
   \cntrd{
     \vspace{-1.5cm}
@@ -2067,7 +2086,21 @@ at #5 {#7};
   \node at (bigLBpos) {
     \begin{tikzpicture}[scale=2.0,every node/.style={transform shape}]
   \node (dGraphCenter) at ($(0.0, 0.0)$) {};
-  
+
+    \uncover<\coverReadRightFr-\befCoverWriteRightFr>{ \traverseSingleBorder{colorCOV}{d11} }
+    \uncover<\coverWriteRightFr-\befCoverReadLeftFr>{ \traverseTwoVertBorder{colorCOV}{d11}{d12} }
+
+    \uncover<\coverReadLeftFr-\befCoverWriteLeftFr>{
+      \draw[pattern=swnestripes, pattern color=colorCOV, thick, rounded corners]
+        ($(d1) + (-0.45,0.4)$)   -- ($(d11) + (0.45,0.4)$)
+        -- ($(d12) + (0.45,-0.4)$) -- ($(d12) + (-0.45,-0.4)$) -- ($(d11) + (-0.45,-0.4)$) -- ($(d1) + (-0.45,-0.4)$) -- cycle;
+    }
+
+    \uncover<\coverWriteLeftFr->{ \traverseTwoVertBorder{colorCOV}{d1}{d12} }
+
+    \uncover<\issueLeftFr->{ \traverseSingleBorder{colorISS}{d2} }
+    \uncover<\issueRightFr->{ \traverseSingleBorder{colorISS}{d12} }
+
     \node (d1)  at ($(dGraphCenter) + (-0.5, 0.5)$) {$\rlab{}{x}{1}$ };
     \node (d2)  at ($(d1)  + (0, -1)$)  {$\wlab{}{y}{1}$ };
     \node (d11) at ($(d1)  + (1,  0)$)  {$\rlab{}{y}{1}$ };
@@ -2093,18 +2126,20 @@ at #5 {#7};
 
   \only<\titleTraverseFr->{
     \uncover<\legendFr->{
-      \node (covLegend) at ($(ptrRight) + (3.0, 0.0)$) {};
-      \node (covEllL)   at ($(covLegend) + (-1.5,-0.5)$) {};
-      \node (covEllR)   at ($(covLegend) + (1.5,0.5)$) {};
+      \node (covLegend) at ($(ptrRight) + (3.0, -0.2)$) {};
+      \node (covEllL)   at ($(covLegend) + (-1.6,-0.5)$) {};
+      \node (covEllR)   at ($(covLegend) + (1.6,0.5)$) {};
 
-      \node (issLegend) at ($(ptrRight) + (3.0, -1.5)$) {};
-      \node (issEllL)   at ($(issLegend) + (-1.5,-0.5)$) {};
-      \node (issEllR)   at ($(issLegend) + (1.5,0.5)$) {};
+      \node (issLegend) at ($(ptrRight) + (3.0, -1.7)$) {};
+      \node (issEllL)   at ($(issLegend) + (-1.6,-0.5)$) {};
+      \node (issEllR)   at ($(issLegend) + (1.6,0.5)$) {};
   
-      \draw[pattern=swnestripes, pattern color=magenta!30] (covEllL) rectangle (covEllR);
+      \draw[pattern=swnestripes, pattern color=colorCOV, thick, rounded corners]
+        (covEllL) rectangle (covEllR);
       \node at (covLegend) {\Large Покрытые};
 
-      \draw[pattern=north east lines, pattern color=magenta!30] (issEllL) rectangle (issEllR);
+      \draw[pattern=swnestripes, pattern color=colorISS, thick, rounded corners]
+        (issEllL) rectangle (issEllR);
       \node at (issLegend) {\Large Выпущенные};
     }
   }
@@ -2131,33 +2166,63 @@ at #5 {#7};
 \section{Итоги}
 
 \fr{\LARGE Публикации}{
-  \footnotesize
-
-  \begin{block}{ВАК}
+  \scriptsize
+  
+  \begin{block}{\scriptsize ВАК}
     \begin{itemize}
-      \item О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель \ARMax
-        @ НТВ СПбГПУ'17 \#4; \\
-        {\color{darkGreen}{*}}А. Подкопаев, О. Лахав, В. Вафеядис
-      \item Обещающая компиляция в \ARMax{\color{darkGreen}{*}} @ Откр. конф. ИСП РАН'17
-        %% (А. Подкопаев, О. Лахав, В. Вафеядис)
+      \item А. Подкопаев, О. Лахав, В. Вафеядис. \\
+      О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель ARMv8.3 //
+      НТВ СПбГПУ'17 \\
+      \item А. Подкопаев, О. Лахав, В. Вафеядис. \\
+      Обещающая компиляция в ARMv8.3 // Труды ИСП РАН'??
     \end{itemize}
   \end{block}
 
-  \begin{block}{SCOPUS и Web of Science}
+  \begin{block}{\scriptsize SCOPUS и Web of Science}
     \begin{itemize}
-      \item Promising compilation to ARMv8 POP{\color{darkGreen}{*}} @ ECOOP'17 \\
-         %% (A. Podkopaev, O. Lahav, V. Vafeiadis)
+      \item A. Podkopaev, O. Lahav, V. Vafeiadis. \\
+      Promising compilation to ARMv8 POP // ECOOP'17 \\
     \end{itemize}
   \end{block}
 
-  \begin{block}{Остальные}
+  \begin{block}{\scriptsize Остальные}
     \begin{itemize}
-      \item Обещающая компиляция в ARMv8{\color{darkGreen}{*}} @ PLC'17
-      \item Operational Aspects of C/C++ Concurrrency @ arXiv'16; \\
-         A. Podkopaev, I. Sergey, A. Nanevski
+      \item А. Подкопаев, О. Лахав, В. Вафеядис. \\
+        Обещающая компиляция в ARMv8 // PLC'17
+      \item A. Podkopaev, I. Sergey, A. Nanevski \\
+      Operational Aspects of C/C++ Concurrrency // arXiv'16; \\
     \end{itemize}
   \end{block}
 }
+
+%% \fr{\LARGE Публикации}{
+%%   \footnotesize
+
+%%   \begin{block}{ВАК}
+%%     \begin{itemize}
+%%       \item О корректности компиляции подмножества обещающей модели памяти в аксиоматическую модель \ARMax
+%%         @ НТВ СПбГПУ'17 \#4; \\
+%%         {\color{darkGreen}{*}}А. Подкопаев, О. Лахав, В. Вафеядис
+%%       \item Обещающая компиляция в \ARMax{\color{darkGreen}{*}} @ Откр. конф. ИСП РАН'17
+%%         %% (А. Подкопаев, О. Лахав, В. Вафеядис)
+%%     \end{itemize}
+%%   \end{block}
+
+%%   \begin{block}{SCOPUS и Web of Science}
+%%     \begin{itemize}
+%%       \item Promising compilation to ARMv8 POP{\color{darkGreen}{*}} @ ECOOP'17 \\
+%%          %% (A. Podkopaev, O. Lahav, V. Vafeiadis)
+%%     \end{itemize}
+%%   \end{block}
+
+%%   \begin{block}{Остальные}
+%%     \begin{itemize}
+%%       \item Обещающая компиляция в ARMv8{\color{darkGreen}{*}} @ PLC'17
+%%       \item Operational Aspects of C/C++ Concurrrency @ arXiv'16; \\
+%%          A. Podkopaev, I. Sergey, A. Nanevski
+%%     \end{itemize}
+%%   \end{block}
+%% }
 
 \fri{\huge Планы на будущее}{
   \LARGE
