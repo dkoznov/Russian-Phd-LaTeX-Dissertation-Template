@@ -422,81 +422,61 @@ at #5 {#7};
 \tikzset{round left paren/.style={ncbar=0.5cm,out=120,in=-120}}
 \tikzset{round right paren/.style={ncbar=0.5cm,out=60,in=-60}}
 
-\begin{document}
-
 %% Custom TikZ patterns
-    \pgfdeclarepatternformonly{swnestripes}{\pgfpoint{0cm}{0cm}}{\pgfpoint{1cm}{1cm}}{\pgfpoint{1cm}{1cm}}
-    {
-        \foreach \i in {0.1cm, 0.3cm,...,0.9cm}
-        {
-         \pgfpathmoveto{\pgfpoint{\i}{0cm}}
-         \pgfpathlineto{\pgfpoint{1cm}{1cm - \i}}
-         \pgfpathlineto{\pgfpoint{1cm}{1cm - \i + 0.1cm}}
-         \pgfpathlineto{\pgfpoint{\i - 0.1cm}{0cm}}
-         \pgfpathclose%
-         \pgfusepath{fill}
-         \pgfpathmoveto{\pgfpoint{0cm}{\i}}
-         \pgfpathlineto{\pgfpoint{1cm - \i}{1cm}}
-         \pgfpathlineto{\pgfpoint{1cm - \i - 0.1cm}{1cm}}
-         \pgfpathlineto{\pgfpoint{0cm}{\i + 0.1cm}}
-         \pgfpathclose%
-         \pgfusepath{fill}
-        }
-    }
-    %% \pgfdeclarepatternformonly{swneStripes}{\pgfpoint{0cm}{0cm}}{\pgfpoint{1cm}{1cm}}{\pgfpoint{1cm}{1cm}}
-    %% {
-    %%     \foreach \i in {0.1cm, 0.3cm,...,0.9cm}
-    %%     {
-    %%      \pgfpathmoveto{\pgfpoint{\i}{0cm}}
-    %%      \pgfpathlineto{\pgfpoint{1cm}{1cm - \i}}
-    %%      \pgfpathlineto{\pgfpoint{1cm}{1cm - \i - 0.1cm}}
-    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{0cm}}
-    %%      \pgfpathclose%
-    %%      \pgfusepath{fill}
-    %%      \pgfpathmoveto{\pgfpoint{0cm}{\i}}
-    %%      \pgfpathlineto{\pgfpoint{1cm - \i}{1cm}}
-    %%      \pgfpathlineto{\pgfpoint{1cm - \i + 0.1cm}{1cm}}
-    %%      \pgfpathlineto{\pgfpoint{0cm}{\i - 0.1cm}}
-    %%      \pgfpathclose%
-    %%      \pgfusepath{fill}
-    %%     }
-    %% }
-    %% \pgfdeclarepatternformonly{senwstripes}{\pgfpoint{0cm}{0cm}}{\pgfpoint{1cm}{1cm}}{\pgfpoint{1cm}{1cm}}
-    %% {
-    %%     \foreach \i in {0.1cm, 0.3cm,...,0.9cm}
-    %%     {
-    %%      \pgfpathmoveto{\pgfpoint{0cm}{\i}}
-    %%      \pgfpathlineto{\pgfpoint{0cm}{\i + 0.1cm}}
-    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{0cm}}
-    %%      \pgfpathlineto{\pgfpoint{\i}{0cm}}
-    %%      \pgfpathclose%
-    %%      \pgfusepath{fill}
-    %%      \pgfpathmoveto{\pgfpoint{1cm}{\i}}
-    %%      \pgfpathlineto{\pgfpoint{\i}{1cm}}
-    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{1cm}}
-    %%      \pgfpathlineto{\pgfpoint{1cm}{\i + 0.1cm}}
-    %%      \pgfpathclose%
-    %%      \pgfusepath{fill}
-    %%     }
-    %% }
-    %% \pgfdeclarepatternformonly{senwStripes}{\pgfpoint{0cm}{0cm}}{\pgfpoint{1cm}{1cm}}{\pgfpoint{1cm}{1cm}}
-    %% {
-    %%     \foreach \i in {0.0cm, 0.2cm,...,0.8cm}
-    %%     {
-    %%      \pgfpathmoveto{\pgfpoint{\i}{0cm}}
-    %%      \pgfpathlineto{\pgfpoint{0cm}{\i}}
-    %%      \pgfpathlineto{\pgfpoint{0cm}{\i + 0.1cm}}
-    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{0cm}}
-    %%      \pgfpathclose%
-    %%      \pgfusepath{fill}
-    %%      \pgfpathmoveto{\pgfpoint{1cm}{\i}}
-    %%      \pgfpathlineto{\pgfpoint{\i}{1cm}}
-    %%      \pgfpathlineto{\pgfpoint{\i + 0.1cm}{1cm}}
-    %%      \pgfpathlineto{\pgfpoint{1cm}{\i + 0.1cm}}
-    %%      \pgfpathclose%
-    %%      \pgfusepath{fill}
-    %%     }
-    %% }
+
+% defining the new dimensions and parameters
+\newlength{\hatchspread}
+\newlength{\hatchthickness}
+\newlength{\hatchshift}
+\newcommand{\hatchcolor}{}
+% declaring the keys in tikz
+\tikzset{hatchspread/.code={\setlength{\hatchspread}{#1}},
+         hatchthickness/.code={\setlength{\hatchthickness}{#1}},
+         hatchshift/.code={\setlength{\hatchshift}{#1}},% must be >= 0
+         hatchcolor/.code={\renewcommand{\hatchcolor}{#1}}}
+% setting the default values
+\tikzset{hatchspread=10pt,
+         hatchthickness=4pt,
+         hatchshift=0pt,% must be >= 0
+         hatchcolor=black}
+% declaring the pattern
+\pgfdeclarepatternformonly[\hatchspread,\hatchthickness,\hatchshift,\hatchcolor]% variables
+   {custom north west lines}% name
+   {\pgfqpoint{\dimexpr-2\hatchthickness}{\dimexpr-2\hatchthickness}}% lower left corner
+   {\pgfqpoint{\dimexpr\hatchspread+2\hatchthickness}{\dimexpr\hatchspread+2\hatchthickness}}% upper right corner
+   {\pgfqpoint{\dimexpr\hatchspread}{\dimexpr\hatchspread}}% tile size
+   {% shape description
+    \pgfsetlinewidth{\hatchthickness}
+    \pgfpathmoveto{\pgfqpoint{0pt}{\dimexpr\hatchspread+\hatchshift}}
+    \pgfpathlineto{\pgfqpoint{\dimexpr\hatchspread+0.15pt+\hatchshift}{-0.15pt}}
+    \ifdim \hatchshift > 0pt
+      \pgfpathmoveto{\pgfqpoint{0pt}{\hatchshift}}
+      \pgfpathlineto{\pgfqpoint{\dimexpr0.15pt+\hatchshift}{-0.15pt}}
+    \fi
+    \pgfsetstrokecolor{\hatchcolor}
+%    \pgfsetdash{{1pt}{1pt}}{0pt}% dashing cannot work correctly in all situation this way
+    \pgfusepath{stroke}
+   }
+
+\pgfdeclarepatternformonly[\hatchspread,\hatchthickness,\hatchshift,\hatchcolor]% variables
+   {custom north east lines}% name
+   {\pgfqpoint{\dimexpr-2\hatchthickness}{\dimexpr-2\hatchthickness}}% lower left corner
+   {\pgfqpoint{\dimexpr\hatchspread+2\hatchthickness}{\dimexpr\hatchspread+2\hatchthickness}}% upper right corner
+   {\pgfqpoint{\dimexpr\hatchspread}{\dimexpr\hatchspread}}% tile size
+   {% shape description
+    \pgfsetlinewidth{\hatchthickness}
+    \pgfpathmoveto{\pgfqpoint{\dimexpr\hatchshift-0.15pt}{-0.15pt}}
+    \pgfpathlineto{\pgfqpoint{\dimexpr\hatchspread+0.15pt}{\dimexpr\hatchspread-\hatchshift+0.15pt}}
+    \ifdim \hatchshift > 0pt
+      \pgfpathmoveto{\pgfqpoint{-0.15pt}{\dimexpr\hatchspread-\hatchshift-0.15pt}}
+      \pgfpathlineto{\pgfqpoint{\dimexpr\hatchshift+0.15pt}{\dimexpr\hatchspread+0.15pt}}
+    \fi
+    \pgfsetstrokecolor{\hatchcolor}
+%    \pgfsetdash{{1pt}{1pt}}{0pt}% dashing cannot work correctly in all situation this way
+    \pgfusepath{stroke}
+   }
+
+\begin{document}
 
 \title
 {Операционные методы в приложении к слабым моделям памяти}
@@ -645,11 +625,11 @@ at #5 {#7};
 }
 
 \newcommand{\traverseSingleBorder}[2]{
-    \draw[pattern=swnestripes, pattern color=#1, thick, rounded corners] ($(#2)  + (-0.35,-0.3)$) rectangle ++(0.7,0.6);
+    \draw[pattern=custom north east lines, hatchcolor=#1, thick, rounded corners] ($(#2)  + (-0.35,-0.3)$) rectangle ++(0.7,0.6);
 }
 
 \newcommand{\traverseTwoVertBorder}[3]{
-    \draw[pattern=swnestripes, pattern color=#1, thick, rounded corners] ($(#2)  + (-0.45,0.4)$) rectangle ($(#3)  + (0.45,-0.4)$);
+    \draw[pattern=custom north east lines, hatchcolor=#1, thick, rounded corners] ($(#2)  + (-0.45,0.4)$) rectangle ($(#3)  + (0.45,-0.4)$);
 }
 
 {\setbeamertemplate{footline}{}\setbeamertemplate{headline}{}\frame[plain,noframenumbering]{\titlepage}}
@@ -2091,7 +2071,7 @@ at #5 {#7};
     \uncover<\coverWriteRightFr-\befCoverReadLeftFr>{ \traverseTwoVertBorder{colorCOV}{d11}{d12} }
 
     \uncover<\coverReadLeftFr-\befCoverWriteLeftFr>{
-      \draw[pattern=swnestripes, pattern color=colorCOV, thick, rounded corners]
+      \draw[pattern=custom north east lines, hatchcolor=colorCOV, thick, rounded corners]
         ($(d1) + (-0.45,0.4)$)   -- ($(d11) + (0.45,0.4)$)
         -- ($(d12) + (0.45,-0.4)$) -- ($(d12) + (-0.45,-0.4)$) -- ($(d11) + (-0.45,-0.4)$) -- ($(d1) + (-0.45,-0.4)$) -- cycle;
     }
@@ -2134,11 +2114,11 @@ at #5 {#7};
       \node (issEllL)   at ($(issLegend) + (-1.6,-0.5)$) {};
       \node (issEllR)   at ($(issLegend) + (1.6,0.5)$) {};
   
-      \draw[pattern=swnestripes, pattern color=colorCOV, thick, rounded corners]
+      \draw[pattern=custom north east lines, hatchcolor=colorCOV, thick, rounded corners]
         (covEllL) rectangle (covEllR);
       \node at (covLegend) {\Large Покрытые};
 
-      \draw[pattern=swnestripes, pattern color=colorISS, thick, rounded corners]
+      \draw[pattern=custom north east lines, hatchcolor=colorISS, thick, rounded corners]
         (issEllL) rectangle (issEllR);
       \node at (issLegend) {\Large Выпущенные};
     }
