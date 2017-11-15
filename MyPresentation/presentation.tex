@@ -1303,10 +1303,10 @@ at #5 {#7};
 \section{Описание результатов}
 
 \begin{frame}<-8>[label=resultsFrame]{\huge Результаты}
-  \setorder{{firstFr},{opCppFr,interpreterFr},
+  \setorder{{firstFr},{opCppFr},
     {promiseDiscussionFr},{promisePropertiesFr},{promisePerspectiveFr},{promiseARMHoleFr},
     {compilationFr},{compilationAxFr},
-    {opCppSectionFr},{armPOPSectionFr},{armAxSectionFr},{fullResultFr},{thanksFr}}
+    {opCppSectionFr},{armPOPSectionFr},{armAxSectionFr},{fullResultFr},{interpreterLinkFr},{thanksFr}}
   \prevFr{\befCompilationFr}{\compilationFr}
   \nextFr{\nextPromisePropertiesFr}{\promisePropertiesFr}
 
@@ -1319,9 +1319,9 @@ at #5 {#7};
       \toShadow
         {-\befOpCppSectionFr,\opCppSectionFr,\nextArmAxSectionFr-}
         {\armPOPSectionFr,\armAxSectionFr}
-      {Разработан операционный аналог модели C/C++11}
+      {Предложена операционный аналог модели памяти C/С++11 и реализован интерпретатор для него}
     } \\
-    %% \uncover<\interpreterFr->{ {\scriptsize [Интерпретатор: \url{github.com/anlun/OperationalSemanticsC11}]} }
+    \only<\interpreterLinkFr->{ {\scriptsize [Интерпретатор: \url{github.com/anlun/OperationalSemanticsC11}]} }
     \vfill
     
     \only<\promiseDiscussionFr-\promiseARMHoleFr>{
@@ -1354,17 +1354,17 @@ at #5 {#7};
     }
     \vfill
     \uncover<\compilationAxFr->{
+      %% \item
+      %%   \toShadow
+      %%     {-\befOpCppSectionFr,\armAxSectionFr,\nextArmAxSectionFr-}
+      %%     {\opCppSectionFr,\armPOPSectionFr}
+      %%   {Разработан метод доказательства ККОМ в аксиоматические модели}
+      %% \vfill
       \item
         \toShadow
           {-\befOpCppSectionFr,\armAxSectionFr,\nextArmAxSectionFr-}
           {\opCppSectionFr,\armPOPSectionFr}
-        {Разработан метод доказательства ККОМ в аксиоматические модели}
-      \vfill
-      \item
-        \toShadow
-          {-\befOpCppSectionFr,\armAxSectionFr,\nextArmAxSectionFr-}
-          {\opCppSectionFr,\armPOPSectionFr}
-        {Доказана ККОМ в аксиоматическую \ARMax}
+        {Доказана ККОМ в аксиоматическую $\ARMax$ с помощью метода, основанного на построении операционной семантики по аксиоматической}
     }
   \end{itemize}
 
@@ -2211,7 +2211,7 @@ at #5 {#7};
   \item Логика для программ в обещающей машине
 }
 
-\againframe<12->{resultsFrame}
+\againframe<13->{resultsFrame}
 
 \begin{frame}[allowframebreaks]{Ссылки}
 \bibliographystyle{apalike}
