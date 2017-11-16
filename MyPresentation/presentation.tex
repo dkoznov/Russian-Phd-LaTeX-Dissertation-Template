@@ -1496,15 +1496,23 @@ at #5 {#7};
 
 \fri{\huge Операционная модель \OpCpp}{
   \Large
+  \item Поддержаны все основные конструкции \\
+    \textcolor{gray!50!white}{(relaxed, release, acquire, SC, fences, CAS)}
+  \vfill
   \item Интерпретатор
   \begin{itemize}
     \large
     \item Реализован на Racket с помощью PLT/Redex
     \item \url{github.com/anlun/OperationalSemanticsC11}
   \end{itemize}
-  \item Синтаксический способ переупорядочивания инструкций
-  \item Consume
-  \item \dots
+  \vfill
+  \item Апробирована на 40 тестах
+  \begin{itemize}
+    \large
+    \item Совпадает с C/C++11 MM на 36 тестах
+    \item \tick: 2 теста --- ``значения из воздуха''
+    \item \fail: 2 теста --- синтаксическое ограничение
+  \end{itemize}
 }
 
 \againframe<10>{resultsFrame}
