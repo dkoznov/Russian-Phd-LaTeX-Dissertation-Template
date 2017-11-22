@@ -1,7 +1,7 @@
 %&preformat-disser
 \RequirePackage[l2tabu,orthodox]{nag} % Раскомментировав, можно в логе получать рекомендации относительно правильного использования пакетов и предупреждения об устаревших и нерекомендуемых пакетах
 % Формат А4, 14pt (ГОСТ Р 7.0.11-2011, 5.3.6)
-\documentclass[a4paper,14pt,oneside,openany]{memoir}
+\documentclass[a4paper,14pt,oneside,openany,oldfontcommands]{memoir}
 
 \input{common/setup}               % общие настройки шаблона
 \input{common/packages}  % Пакеты общие для диссертации и автореферата
@@ -21,6 +21,8 @@
 
 \input{Dissertation/inclusioncontrol}    % Управление компиляцией отдельных частей диссертации
 
+\input{common/defs.tex}
+
 \begin{document}
 
 \input{common/renames}                   % Переопределение именований
@@ -29,14 +31,19 @@
 \include{Dissertation/title}           % Титульный лист
 \include{Dissertation/contents}        % Оглавление
 \include{Dissertation/introduction}    % Введение
-\include{Dissertation/part1}           % Глава 1
-\include{Dissertation/part2}           % Глава 2
-\include{Dissertation/part3}           % Глава 3
+\include{Dissertation/overview}        % Обзор предметной области
+\include{Dissertation/opc11}           % OpC11
+\include{Dissertation/promise}         % Promise 
+\include{Dissertation/armvPOP}         % ARMvPOP
+\include{Dissertation/armv83}          % ARMv83
+%% \include{Dissertation/part1}           % Глава 1
+%% \include{Dissertation/part2}           % Глава 2
+%% \include{Dissertation/part3}           % Глава 3
 \include{Dissertation/conclusion}      % Заключение
 \include{Dissertation/acronyms}        % Список сокращений и условных обозначений
 \include{Dissertation/dictionary}      % Словарь терминов
 \include{Dissertation/references}      % Список литературы
 \include{Dissertation/lists}           % Списки таблиц и изображений (иллюстративный материал)
-\include{Dissertation/appendix}        % Приложения
+%% \include{Dissertation/appendix}        % Приложения
 
 \end{document}
